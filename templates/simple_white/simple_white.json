@@ -1,0 +1,496 @@
+{
+  "theme": "simple_white",
+  "name": "简约白",
+  "description": "简洁清爽的设计，适合学术演示和技术分享",
+  "category": "简约",
+  "slideSize": {
+    "cx": 10080000,
+    "cy": 7560000
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "name": "首页",
+      "background": {
+        "type": "solidFill",
+        "color": "ffffff"
+      },
+      "elements": [
+        {
+          "type": "text",
+          "name": "title",
+          "placeholder": "演示文稿标题",
+          "x": 1440000,
+          "y": 2160000,
+          "width": 7200000,
+          "height": 1440000,
+          "fontSize": 4800,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "author",
+          "placeholder": "作者姓名",
+          "x": 1440000,
+          "y": 4320000,
+          "width": 7200000,
+          "height": 720000,
+          "fontSize": 2400,
+          "fontColor": "666666",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": false
+        }
+      ]
+    },
+    {
+      "type": "contents",
+      "name": "目录页",
+      "background": {
+        "type": "solidFill",
+        "color": "ffffff"
+      },
+      "elements": [
+        {
+          "type": "text",
+          "name": "contents_title",
+          "placeholder": "目录",
+          "x": 720000,
+          "y": 720000,
+          "width": 8640000,
+          "height": 720000,
+          "fontSize": 3600,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "item1_number",
+          "placeholder": "01",
+          "x": 1440000,
+          "y": 2160000,
+          "width": 720000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "item1_title",
+          "placeholder": "第一章节标题",
+          "x": 2160000,
+          "y": 2160000,
+          "width": 6480000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        },
+        {
+          "type": "text",
+          "name": "item2_number",
+          "placeholder": "02",
+          "x": 1440000,
+          "y": 2880000,
+          "width": 720000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "item2_title",
+          "placeholder": "第二章节标题",
+          "x": 2160000,
+          "y": 2880000,
+          "width": 6480000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        },
+        {
+          "type": "text",
+          "name": "item3_number",
+          "placeholder": "03",
+          "x": 1440000,
+          "y": 3600000,
+          "width": 720000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "item3_title",
+          "placeholder": "第三章节标题",
+          "x": 2160000,
+          "y": 3600000,
+          "width": 6480000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        },
+        {
+          "type": "text",
+          "name": "item4_number",
+          "placeholder": "04",
+          "x": 1440000,
+          "y": 4320000,
+          "width": 720000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "item4_title",
+          "placeholder": "第四章节标题",
+          "x": 2160000,
+          "y": 4320000,
+          "width": 6480000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        },
+        {
+          "type": "text",
+          "name": "item5_number",
+          "placeholder": "05",
+          "x": 1440000,
+          "y": 5040000,
+          "width": 720000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "item5_title",
+          "placeholder": "第五章节标题",
+          "x": 2160000,
+          "y": 5040000,
+          "width": 6480000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        },
+        {
+          "type": "text",
+          "name": "item6_number",
+          "placeholder": "06",
+          "x": 1440000,
+          "y": 5760000,
+          "width": 720000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "item6_title",
+          "placeholder": "第六章节标题",
+          "x": 2160000,
+          "y": 5760000,
+          "width": 6480000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        }
+      ]
+    },
+    {
+      "type": "section_title",
+      "name": "章节标题页",
+      "background": {
+        "type": "solidFill",
+        "color": "f5f5f5"
+      },
+      "elements": [
+        {
+          "type": "text",
+          "name": "section_number",
+          "placeholder": "01",
+          "x": 720000,
+          "y": 2160000,
+          "width": 1440000,
+          "height": 1440000,
+          "fontSize": 7200,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "section_title",
+          "placeholder": "章节标题",
+          "x": 2880000,
+          "y": 2880000,
+          "width": 6480000,
+          "height": 1440000,
+          "fontSize": 4800,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": true
+        }
+      ]
+    },
+    {
+      "type": "content_2x2",
+      "name": "内容页 - 2组x2项",
+      "background": {
+        "type": "solidFill",
+        "color": "ffffff"
+      },
+      "elements": [
+        {
+          "type": "text",
+          "name": "page_title",
+          "placeholder": "页面标题",
+          "x": 720000,
+          "y": 720000,
+          "width": 8640000,
+          "height": 720000,
+          "fontSize": 3600,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "group1_title",
+          "placeholder": "要点一",
+          "x": 720000,
+          "y": 2160000,
+          "width": 4320000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "group1_content",
+          "placeholder": "详细内容描述，可以包含多行文字来详细说明这个要点的具体内容。",
+          "x": 720000,
+          "y": 2880000,
+          "width": 4320000,
+          "height": 2160000,
+          "fontSize": 1800,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        },
+        {
+          "type": "text",
+          "name": "group2_title",
+          "placeholder": "要点二",
+          "x": 5400000,
+          "y": 2160000,
+          "width": 4320000,
+          "height": 540000,
+          "fontSize": 2400,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "group2_content",
+          "placeholder": "详细内容描述，可以包含多行文字来详细说明这个要点的具体内容。",
+          "x": 5400000,
+          "y": 2880000,
+          "width": 4320000,
+          "height": 2160000,
+          "fontSize": 1800,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        }
+      ]
+    },
+    {
+      "type": "content_4x2",
+      "name": "内容页 - 4组x2项",
+      "background": {
+        "type": "solidFill",
+        "color": "ffffff"
+      },
+      "elements": [
+        {
+          "type": "text",
+          "name": "page_title",
+          "placeholder": "页面标题",
+          "x": 720000,
+          "y": 720000,
+          "width": 8640000,
+          "height": 720000,
+          "fontSize": 3600,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "center",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "group1_title",
+          "placeholder": "要点一",
+          "x": 720000,
+          "y": 2160000,
+          "width": 2160000,
+          "height": 540000,
+          "fontSize": 1800,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "group1_content",
+          "placeholder": "内容描述",
+          "x": 720000,
+          "y": 2880000,
+          "width": 2160000,
+          "height": 1440000,
+          "fontSize": 1400,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        },
+        {
+          "type": "text",
+          "name": "group2_title",
+          "placeholder": "要点二",
+          "x": 3240000,
+          "y": 2160000,
+          "width": 2160000,
+          "height": 540000,
+          "fontSize": 1800,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "group2_content",
+          "placeholder": "内容描述",
+          "x": 3240000,
+          "y": 2880000,
+          "width": 2160000,
+          "height": 1440000,
+          "fontSize": 1400,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        },
+        {
+          "type": "text",
+          "name": "group3_title",
+          "placeholder": "要点三",
+          "x": 5760000,
+          "y": 2160000,
+          "width": 2160000,
+          "height": 540000,
+          "fontSize": 1800,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "group3_content",
+          "placeholder": "内容描述",
+          "x": 5760000,
+          "y": 2880000,
+          "width": 2160000,
+          "height": 1440000,
+          "fontSize": 1400,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        },
+        {
+          "type": "text",
+          "name": "group4_title",
+          "placeholder": "要点四",
+          "x": 8280000,
+          "y": 2160000,
+          "width": 2160000,
+          "height": 540000,
+          "fontSize": 1800,
+          "fontColor": "4472c4",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": true
+        },
+        {
+          "type": "text",
+          "name": "group4_content",
+          "placeholder": "内容描述",
+          "x": 8280000,
+          "y": 2880000,
+          "width": 2160000,
+          "height": 1440000,
+          "fontSize": 1400,
+          "fontColor": "2e2e2e",
+          "fontFamily": "微软雅黑",
+          "textAlign": "left",
+          "bold": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  ai-pptx:
+    build: .
+    ports:
+      - "8000:8000"  # 后端API
+      - "8501:8501"  # 前端界面
+    environment:
+      - APP_NAME=AI-PPTX
+      - DEBUG=True
+      - DATABASE_URL=sqlite:///./ai_pptx.db
+      # AI API 配置 (请在 .env 文件中设置)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./templates:/app/templates
+      - ./static:/app/static
+      - ./ai_pptx.db:/app/ai_pptx.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 可选：添加 Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - ai-pptx
+    restart: unless-stopped
+    profiles:
+      - production 
