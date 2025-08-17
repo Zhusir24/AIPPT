@@ -980,60 +980,148 @@ class AIPPTXApp {
     /**
      * 保存用户设置
      */
-    saveUserSettings() {
-        const backendUrlInput = document.getElementById('backend-url-input');
-        const aiProviderSelect = document.getElementById('ai-provider-select');
-        const apiKeyInput = document.getElementById('api-key-input');
-        
-        // 自定义API配置字段
-        const customApiUrl = document.getElementById('custom-api-url');
-        const customModelName = document.getElementById('custom-model-name');
-        const customApiKey = document.getElementById('custom-api-key');
+    async saveUserSettings() {
+        this.showToast('正在保存设置...', 'info');
 
-        this.apiConfig.backendUrl = backendUrlInput?.value || this.apiConfig.backendUrl;
-        this.apiConfig.aiProvider = aiProviderSelect?.value || this.apiConfig.aiProvider;
-        this.apiConfig.apiKey = apiKeyInput?.value || this.apiConfig.apiKey;
-        
-        // 保存自定义配置
-        this.apiConfig.customApiUrl = customApiUrl?.value || this.apiConfig.customApiUrl;
-        this.apiConfig.customModelName = customModelName?.value || this.apiConfig.customModelName;
-        this.apiConfig.customApiKey = customApiKey?.value || this.apiConfig.customApiKey;
+        try {
+            const backendUrlInput = document.getElementById('backend-url-input');
+            const aiProviderSelect = document.getElementById('ai-provider-select');
+            const apiKeyInput = document.getElementById('api-key-input');
+            
+            // 自定义API配置字段
+            const customApiUrl = document.getElementById('custom-api-url');
+            const customModelName = document.getElementById('custom-model-name');
+            const customApiKey = document.getElementById('custom-api-key');
 
-        // 更新API客户端配置
-        apiClient.setBaseURL(this.apiConfig.backendUrl);
+            this.apiConfig.backendUrl = backendUrlInput?.value || this.apiConfig.backendUrl;
+            this.apiConfig.aiProvider = aiProviderSelect?.value || this.apiConfig.aiProvider;
+            this.apiConfig.apiKey = apiKeyInput?.value || this.apiConfig.apiKey;
+            
+            // 保存自定义配置
+            this.apiConfig.customApiUrl = customApiUrl?.value || this.apiConfig.customApiUrl;
+            this.apiConfig.customModelName = customModelName?.value || this.apiConfig.customModelName;
+            this.apiConfig.customApiKey = customApiKey?.value || this.apiConfig.customApiKey;
 
-        // 保存到本地存储
-        this.saveSettings();
+            // 更新API客户端配置
+            apiClient.setBaseURL(this.apiConfig.backendUrl);
 
-        // 更新UI
-        this.updateTechInfo();
+            // 构建API配置对象发送到后端
+            let effectiveApiKey = this.apiConfig.apiKey;
+            const configToSave = {
+                provider: this.apiConfig.aiProvider,
+                api_key: effectiveApiKey
+            };
 
-        this.showToast('设置保存成功', 'success');
-        this.closeSettings();
+            // 如果是自定义配置，添加额外参数和使用自定义API密钥
+            if (this.apiConfig.aiProvider === 'custom') {
+                if (this.apiConfig.customApiUrl && this.apiConfig.customModelName && this.apiConfig.customApiKey) {
+                    configToSave.custom_api_url = this.apiConfig.customApiUrl;
+                    configToSave.custom_model_name = this.apiConfig.customModelName;
+                    configToSave.api_key = this.apiConfig.customApiKey;
+                } else {
+                    this.showToast('自定义API配置不完整', 'warning');
+                }
+            }
+
+            // 如果有API密钥，则发送到后端保存并记录日志
+            if (configToSave.api_key) {
+                console.log('正在保存API配置到后端:', {
+                    provider: configToSave.provider,
+                    custom_api_url: configToSave.custom_api_url,
+                    custom_model_name: configToSave.custom_model_name
+                });
+
+                try {
+                    const result = await apiClient.saveAPIConfig(configToSave);
+                    if (result.success) {
+                        console.log('API配置保存成功:', result.data);
+                    }
+                } catch (error) {
+                    console.warn('后端配置保存失败，但本地设置已保存:', error.message);
+                }
+            }
+
+            // 保存到本地存储
+            this.saveSettings();
+
+            // 更新UI
+            this.updateTechInfo();
+
+            this.showToast('设置保存成功', 'success');
+            this.closeSettings();
+
+        } catch (error) {
+            console.error('保存设置失败:', error);
+            this.showToast(`保存失败: ${error.message}`, 'error');
+        }
     }
 
     /**
-     * 测试后端连接
+     * 测试API配置连接
      */
     async testConnection() {
-        const backendUrl = document.getElementById('backend-url-input')?.value || this.apiConfig.backendUrl;
-        
-        this.showToast('正在测试连接...', 'info');
+        this.showToast('正在测试API连接...', 'info');
 
         try {
-            // 临时设置URL进行测试
-            const originalUrl = apiClient.baseURL;
-            apiClient.setBaseURL(backendUrl);
-            
-            const result = await apiClient.healthCheck();
-            
-            // 恢复原URL
-            apiClient.setBaseURL(originalUrl);
-            
-            this.showToast(`连接成功：${result.message || '服务正常'}`, 'success');
+            // 获取当前设置的API配置
+            const aiProvider = document.getElementById('ai-provider-select')?.value || this.apiConfig.aiProvider;
+            const apiKey = document.getElementById('api-key-input')?.value || this.apiConfig.apiKey;
+            const customApiUrl = document.getElementById('custom-api-url')?.value || this.apiConfig.customApiUrl;
+            const customModelName = document.getElementById('custom-model-name')?.value || this.apiConfig.customModelName;
+            const customApiKey = document.getElementById('custom-api-key')?.value || this.apiConfig.customApiKey;
+
+            // 验证必要字段
+            let effectiveApiKey = apiKey;
+            if (aiProvider === 'custom') {
+                if (!customApiUrl || !customModelName || !customApiKey) {
+                    this.showToast('自定义API配置不完整，请填写API地址、模型名称和API密钥', 'error');
+                    return;
+                }
+                effectiveApiKey = customApiKey;
+            } else if (!effectiveApiKey) {
+                this.showToast('请先输入API密钥', 'error');
+                return;
+            }
+
+            // 构建测试配置
+            const testConfig = {
+                provider: aiProvider,
+                api_key: effectiveApiKey,
+                test_message: "你好，这是一个连接测试，请简单回复。"
+            };
+
+            // 如果是自定义配置，添加额外参数
+            if (aiProvider === 'custom') {
+                testConfig.custom_api_url = customApiUrl;
+                testConfig.custom_model_name = customModelName;
+            }
+
+            console.log('正在测试API配置:', {
+                provider: testConfig.provider,
+                custom_api_url: testConfig.custom_api_url,
+                custom_model_name: testConfig.custom_model_name
+            });
+
+            // 调用后端测试API
+            const result = await apiClient.testAPIConfig(testConfig);
+
+            if (result.success) {
+                const details = [
+                    `✅ 连接成功！`,
+                    `🤖 提供商: ${result.provider}`,
+                    `📋 模型: ${result.model_name}`,
+                    `⚡ 延迟: ${result.latency}ms`,
+                    result.response_preview ? `💬 响应预览: ${result.response_preview}` : ''
+                ].filter(Boolean).join('\n');
+                
+                this.showToast(details, 'success');
+            } else {
+                this.showToast(`❌ 连接失败: ${result.message}`, 'error');
+            }
 
         } catch (error) {
-            this.showToast(`连接失败：${error.message}`, 'error');
+            console.error('API配置测试失败:', error);
+            this.showToast(`❌ 测试失败: ${error.message}`, 'error');
         }
     }
 

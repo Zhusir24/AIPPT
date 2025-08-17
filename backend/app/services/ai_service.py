@@ -18,39 +18,284 @@ from ..models.schemas import OutlineGenerateRequest, OutlineGenerateResponse
 class AIService:
     """AI 服务类"""
     
+    # 类级别的配置存储，用于保持配置状态
+    _global_config = {
+        "provider": None,
+        "model": None,
+        "api_key": None,
+        "api_url": None,
+        "client": None
+    }
+    
     def __init__(self, db: Session):
         self.db = db
         self.settings = settings  # 添加settings引用
         self.logger = get_logger(__name__)
         self.logger.debug("🤖 初始化 AI 服务实例")
-        self.client = self.setup_openai_client()
-    
-    def setup_openai_client(self) -> AsyncOpenAI:
-        """配置 OpenAI 客户端"""
-        self.logger.info("🔧 开始配置 AI 客户端")
         
-        # 优先使用 DeepSeek API
+        # 动态模型管理
+        self.current_provider = None
+        self.current_model = None
+        self.client = None
+        
+        # 检查是否有全局配置，如果有则使用，否则初始化默认客户端
+        if self._global_config["client"] is not None:
+            self.logger.info("🔄 使用已保存的API配置")
+            self.current_provider = self._global_config["provider"]
+            self.current_model = self._global_config["model"]
+            self.client = self._global_config["client"]
+            self.logger.success(f"✅ 配置加载成功: {self.current_provider} / {self.current_model}")
+        else:
+            # 初始化客户端
+            self._initialize_default_client()
+    
+    def _initialize_default_client(self):
+        """初始化默认客户端（同步版本）"""
+        self.logger.info("🔧 开始初始化默认 AI 客户端")
+        
+        # 同步方式配置默认客户端
         if self.settings.DEEPSEEK_API_KEY:
             self.logger.info("🤖 使用 DeepSeek API")
-            self.logger.debug(f"🔗 DeepSeek Base URL: {self.settings.DEEPSEEK_BASE_URL}")
-            client = AsyncOpenAI(
+            self.current_provider = "DeepSeek"
+            self.current_model = self.settings.DEEPSEEK_MODEL
+            self.client = AsyncOpenAI(
                 api_key=self.settings.DEEPSEEK_API_KEY,
                 base_url=self.settings.DEEPSEEK_BASE_URL
             )
-            self.logger.success("✅ DeepSeek 客户端配置成功")
-            return client
+            self.logger.success(f"✅ DeepSeek 客户端配置成功: {self.current_model}")
+            
         elif self.settings.OPENAI_API_KEY:
             self.logger.info("🤖 使用 OpenAI API")
-            self.logger.debug(f"🔗 OpenAI Base URL: {self.settings.OPENAI_BASE_URL}")
-            client = AsyncOpenAI(
+            self.current_provider = "OpenAI"
+            self.current_model = self.settings.OPENAI_MODEL
+            self.client = AsyncOpenAI(
                 api_key=self.settings.OPENAI_API_KEY,
                 base_url=self.settings.OPENAI_BASE_URL
             )
-            self.logger.success("✅ OpenAI 客户端配置成功")
-            return client
+            self.logger.success(f"✅ OpenAI 客户端配置成功: {self.current_model}")
+            
+        elif self.settings.ANTHROPIC_API_KEY:
+            self.logger.info("🤖 使用 Anthropic API")
+            self.current_provider = "Anthropic"
+            self.current_model = self.settings.ANTHROPIC_MODEL
+            self.client = AsyncOpenAI(
+                api_key=self.settings.ANTHROPIC_API_KEY,
+                base_url="https://api.anthropic.com"
+            )
+            self.logger.success(f"✅ Anthropic 客户端配置成功: {self.current_model}")
+            
         else:
             self.logger.error("❌ 未配置任何 AI API 密钥")
             raise ValueError("请配置 AI API 密钥")
+    
+    def get_available_models(self) -> Dict[str, Any]:
+        """获取所有可用的模型配置"""
+        self.logger.debug("📋 获取可用模型列表")
+        
+        available_models = {
+            "providers": [],
+            "current_provider": self.current_provider,
+            "current_model": self.current_model
+        }
+        
+        # DeepSeek 模型
+        if self.settings.DEEPSEEK_API_KEY:
+            deepseek_models = {
+                "provider": "DeepSeek",
+                "base_url": self.settings.DEEPSEEK_BASE_URL,
+                "models": [
+                    {"name": "deepseek-chat", "display_name": "DeepSeek Chat"},
+                    {"name": "deepseek-coder", "display_name": "DeepSeek Coder"}
+                ],
+                "is_configured": True
+            }
+            available_models["providers"].append(deepseek_models)
+            self.logger.debug(f"✅ DeepSeek 可用，模型数: {len(deepseek_models['models'])}")
+        
+        # OpenAI 模型
+        if self.settings.OPENAI_API_KEY:
+            openai_models = {
+                "provider": "OpenAI",
+                "base_url": self.settings.OPENAI_BASE_URL,
+                "models": [
+                    {"name": "gpt-4o", "display_name": "GPT-4o"},
+                    {"name": "gpt-4o-mini", "display_name": "GPT-4o Mini"},
+                    {"name": "gpt-4-turbo", "display_name": "GPT-4 Turbo"},
+                    {"name": "gpt-3.5-turbo", "display_name": "GPT-3.5 Turbo"}
+                ],
+                "is_configured": True
+            }
+            available_models["providers"].append(openai_models)
+            self.logger.debug(f"✅ OpenAI 可用，模型数: {len(openai_models['models'])}")
+        
+        # Anthropic 模型
+        if self.settings.ANTHROPIC_API_KEY:
+            anthropic_models = {
+                "provider": "Anthropic",
+                "base_url": "https://api.anthropic.com",
+                "models": [
+                    {"name": "claude-3-5-sonnet-20241022", "display_name": "Claude 3.5 Sonnet"},
+                    {"name": "claude-3-sonnet-20240229", "display_name": "Claude 3 Sonnet"},
+                    {"name": "claude-3-haiku-20240307", "display_name": "Claude 3 Haiku"}
+                ],
+                "is_configured": True
+            }
+            available_models["providers"].append(anthropic_models)
+            self.logger.debug(f"✅ Anthropic 可用，模型数: {len(anthropic_models['models'])}")
+        
+        self.logger.info(f"📊 总共找到 {len(available_models['providers'])} 个可用提供商")
+        return available_models
+    
+    async def switch_model(self, provider: str, model: str) -> Dict[str, Any]:
+        """切换AI模型"""
+        self.logger.info(f"🔄 开始切换模型: {provider} -> {model}")
+        
+        try:
+            # 验证提供商和模型是否可用
+            available_models = self.get_available_models()
+            provider_found = False
+            model_found = False
+            
+            for p in available_models["providers"]:
+                if p["provider"] == provider:
+                    provider_found = True
+                    for m in p["models"]:
+                        if m["name"] == model:
+                            model_found = True
+                            break
+                    break
+            
+            if not provider_found:
+                error_msg = f"提供商 {provider} 未配置或不可用"
+                self.logger.error(f"❌ {error_msg}")
+                return {"success": False, "message": error_msg}
+            
+            if not model_found:
+                error_msg = f"模型 {model} 在提供商 {provider} 中不可用"
+                self.logger.error(f"❌ {error_msg}")
+                return {"success": False, "message": error_msg}
+            
+            # 创建新的客户端
+            old_provider = self.current_provider
+            old_model = self.current_model
+            
+            if provider == "DeepSeek":
+                self.logger.debug(f"🔧 配置 DeepSeek 客户端，模型: {model}")
+                self.client = AsyncOpenAI(
+                    api_key=self.settings.DEEPSEEK_API_KEY,
+                    base_url=self.settings.DEEPSEEK_BASE_URL
+                )
+                
+            elif provider == "OpenAI":
+                self.logger.debug(f"🔧 配置 OpenAI 客户端，模型: {model}")
+                self.client = AsyncOpenAI(
+                    api_key=self.settings.OPENAI_API_KEY,
+                    base_url=self.settings.OPENAI_BASE_URL
+                )
+                
+            elif provider == "Anthropic":
+                self.logger.debug(f"🔧 配置 Anthropic 客户端，模型: {model}")
+                # 注意：这里需要使用Anthropic的客户端，暂时用OpenAI兼容接口
+                self.client = AsyncOpenAI(
+                    api_key=self.settings.ANTHROPIC_API_KEY,
+                    base_url="https://api.anthropic.com"
+                )
+            
+            # 更新当前配置
+            self.current_provider = provider
+            self.current_model = model
+            
+            # 测试新配置
+            test_result = await self._test_model_connection()
+            
+            if test_result["success"]:
+                self.logger.success(f"🎉 模型切换成功: {old_provider}/{old_model} -> {provider}/{model}")
+                self.logger.info(f"🔗 当前使用: {provider} - {model}")
+                
+                return {
+                    "success": True,
+                    "message": f"模型切换成功",
+                    "old_provider": old_provider,
+                    "old_model": old_model,
+                    "new_provider": provider,
+                    "new_model": model,
+                    "test_result": test_result
+                }
+            else:
+                # 切换失败，回滚到原配置
+                self.logger.error(f"❌ 模型连接测试失败，回滚到原配置")
+                if old_provider and old_model:
+                    self.current_provider = old_provider
+                    self.current_model = old_model
+                    # 重新配置原来的客户端
+                    if old_provider == "DeepSeek":
+                        self.client = AsyncOpenAI(
+                            api_key=self.settings.DEEPSEEK_API_KEY,
+                            base_url=self.settings.DEEPSEEK_BASE_URL
+                        )
+                    elif old_provider == "OpenAI":
+                        self.client = AsyncOpenAI(
+                            api_key=self.settings.OPENAI_API_KEY,
+                            base_url=self.settings.OPENAI_BASE_URL
+                        )
+                    elif old_provider == "Anthropic":
+                        self.client = AsyncOpenAI(
+                            api_key=self.settings.ANTHROPIC_API_KEY,
+                            base_url="https://api.anthropic.com"
+                        )
+                
+                return {
+                    "success": False,
+                    "message": f"模型切换失败: {test_result['message']}",
+                    "test_result": test_result
+                }
+                
+        except Exception as e:
+            self.logger.error(f"❌ 模型切换异常: {str(e)}")
+            self.logger.exception("详细错误信息:")
+            return {
+                "success": False,
+                "message": f"模型切换异常: {str(e)}"
+            }
+    
+    async def _test_model_connection(self) -> Dict[str, Any]:
+        """测试当前模型连接"""
+        self.logger.debug("🧪 开始测试模型连接")
+        
+        try:
+            # 发送简单的测试请求
+            response = await self.client.chat.completions.create(
+                model=self.current_model,
+                messages=[
+                    {"role": "user", "content": "Hello, please respond with 'OK' to confirm the connection."}
+                ],
+                max_tokens=10,
+                temperature=0
+            )
+            
+            content = response.choices[0].message.content.strip()
+            self.logger.debug(f"🔍 测试响应: {content}")
+            
+            if content:
+                self.logger.success("✅ 模型连接测试成功")
+                return {
+                    "success": True,
+                    "message": "模型连接正常",
+                    "test_response": content
+                }
+            else:
+                self.logger.warning("⚠️ 模型响应为空")
+                return {
+                    "success": False,
+                    "message": "模型响应为空"
+                }
+                
+        except Exception as e:
+            self.logger.error(f"❌ 模型连接测试失败: {str(e)}")
+            return {
+                "success": False,
+                "message": f"连接测试失败: {str(e)}"
+            }
     
     async def generate_outline(self, request: OutlineGenerateRequest) -> OutlineGenerateResponse:
         """生成内容大纲"""
@@ -264,26 +509,12 @@ class AIService:
             return f"扩展失败: {str(e)}"
     
     def _get_model_name(self) -> str:
-        """获取模型名称，优先使用已配置的API"""
-        if self.settings.DEEPSEEK_API_KEY:
-            return self.settings.DEEPSEEK_MODEL
-        elif self.settings.OPENAI_API_KEY:
-            return self.settings.OPENAI_MODEL
-        elif self.settings.ANTHROPIC_API_KEY:
-            return self.settings.ANTHROPIC_MODEL
-        else:
-            return "deepseek-chat"  # 默认模型
+        """获取当前使用的模型名称"""
+        return self.current_model if self.current_model else "deepseek-chat"
     
     def get_current_provider(self) -> str:
         """获取当前AI提供商"""
-        if self.settings.DEEPSEEK_API_KEY:
-            return "DeepSeek"
-        elif self.settings.OPENAI_API_KEY:
-            return "OpenAI"
-        elif self.settings.ANTHROPIC_API_KEY:
-            return "Anthropic"
-        else:
-            return "未配置"
+        return self.current_provider if self.current_provider else "未配置"
     
     def _build_outline_prompt(self, request: OutlineGenerateRequest) -> str:
         """构建大纲生成提示词"""
@@ -476,4 +707,76 @@ class AIService:
             if current_slide:
                 slides.append(current_slide)
             
-            return {"slides": slides} 
+            return {"slides": slides}
+    
+    def _apply_custom_config(self, api_key: str, api_url: str, model_name: str):
+        """应用自定义API配置"""
+        from openai import AsyncOpenAI
+        
+        self.logger.info(f"🔧 应用自定义配置: {api_url} / {model_name}")
+        
+        self.current_provider = "Custom"
+        self.current_model = model_name
+        self.client = AsyncOpenAI(
+            api_key=api_key,
+            base_url=api_url
+        )
+        
+        # 更新全局配置
+        self._global_config.update({
+            "provider": "Custom",
+            "model": model_name,
+            "api_key": api_key,
+            "api_url": api_url,
+            "client": self.client
+        })
+        
+        self.logger.success(f"✅ 自定义客户端配置成功: {model_name}")
+        
+    def _apply_openai_config(self, api_key: str):
+        """应用OpenAI配置"""
+        from openai import AsyncOpenAI
+        
+        self.logger.info("🔧 应用OpenAI配置")
+        
+        self.current_provider = "OpenAI"
+        self.current_model = "gpt-3.5-turbo"
+        self.client = AsyncOpenAI(
+            api_key=api_key,
+            base_url="https://api.openai.com/v1"
+        )
+        
+        # 更新全局配置
+        self._global_config.update({
+            "provider": "OpenAI",
+            "model": "gpt-3.5-turbo",
+            "api_key": api_key,
+            "api_url": "https://api.openai.com/v1",
+            "client": self.client
+        })
+        
+        self.logger.success(f"✅ OpenAI客户端配置成功: {self.current_model}")
+        
+    def _apply_deepseek_config(self, api_key: str):
+        """应用DeepSeek配置"""
+        from openai import AsyncOpenAI
+        
+        self.logger.info("🔧 应用DeepSeek配置")
+        
+        self.current_provider = "DeepSeek"
+        self.current_model = "deepseek-chat"
+        self.client = AsyncOpenAI(
+            api_key=api_key,
+            base_url="https://api.deepseek.com/v1"
+        )
+        
+        # 更新全局配置
+        self._global_config.update({
+            "provider": "DeepSeek",
+            "model": "deepseek-chat",
+            "api_key": api_key,
+            "api_url": "https://api.deepseek.com/v1",
+            "client": self.client
+        })
+        
+        self.logger.success(f"✅ DeepSeek客户端配置成功: {self.current_model}") 

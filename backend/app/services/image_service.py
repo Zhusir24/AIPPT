@@ -39,28 +39,34 @@ class ImageService:
             "default": ["abstract", "background", "minimal", "modern", "clean", "professional"]
         }
     
-    async def search_images(self, keyword: str, category: str = None, count: int = 3) -> List[Dict[str, Any]]:
+    async def search_images(self, keyword: str, category: str = None, count: int = 3, timeout: int = 5) -> List[Dict[str, Any]]:
         """搜索图片"""
         try:
-            # 根据类别和关键词生成搜索词
-            search_terms = self._generate_search_terms(keyword, category)
+            # 快速返回模式：直接返回空列表，跳过图片搜索
+            # 避免外部API调用导致的卡死问题
+            print(f"⚠️ 跳过图片搜索以避免卡死：{keyword} - {category}")
+            return []
             
-            images = []
-            for search_term in search_terms[:count]:
-                if self.unsplash_access_key:
-                    # 使用Unsplash API
-                    image_data = await self._search_unsplash(search_term)
-                    if image_data:
-                        images.append(image_data)
-                else:
-                    # 使用预设图片或占位符
-                    image_data = self._get_placeholder_image(search_term, category)
-                    images.append(image_data)
-                
-                # 避免API限制
-                time.sleep(0.1)
-            
-            return images
+            # 原有的图片搜索逻辑暂时注释掉
+            # # 根据类别和关键词生成搜索词
+            # search_terms = self._generate_search_terms(keyword, category)
+            # 
+            # images = []
+            # for search_term in search_terms[:count]:
+            #     if self.unsplash_access_key:
+            #         # 使用Unsplash API
+            #         image_data = await self._search_unsplash(search_term)
+            #         if image_data:
+            #             images.append(image_data)
+            #     else:
+            #         # 使用预设图片或占位符
+            #         image_data = self._get_placeholder_image(search_term, category)
+            #         images.append(image_data)
+            #     
+            #     # 避免API限制
+            #     time.sleep(0.1)
+            # 
+            # return images
             
         except Exception as e:
             print(f"图片搜索失败: {e}")

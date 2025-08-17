@@ -200,6 +200,25 @@ class APIClient {
         return this.get(`/api/v1/templates/${templateId}`);
     }
 
+    // ================== API配置相关接口 ==================
+    /**
+     * 测试API配置连接
+     * @param {Object} config - API配置对象
+     * @returns {Promise}
+     */
+    async testAPIConfig(config) {
+        return this.post('/api/v1/ai/test-api-config', config);
+    }
+
+    /**
+     * 保存API配置
+     * @param {Object} config - API配置对象
+     * @returns {Promise}
+     */
+    async saveAPIConfig(config) {
+        return this.post('/api/v1/ai/save-api-config', config);
+    }
+
     // ================== 项目相关接口 ==================
     /**
      * 创建项目

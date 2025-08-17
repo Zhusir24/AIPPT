@@ -97,6 +97,42 @@ class ContentGenerateResponse(BaseModel):
     error_message: Optional[str] = None
 
 
+# API配置相关模式
+class APIProvider(str, Enum):
+    """AI API提供商枚举"""
+    OPENAI = "openai"
+    DEEPSEEK = "deepseek"
+    ANTHROPIC = "anthropic"
+    CUSTOM = "custom"
+
+
+class APIConfigRequest(BaseModel):
+    """API配置请求模型"""
+    provider: APIProvider
+    api_key: str
+    custom_api_url: Optional[str] = None
+    custom_model_name: Optional[str] = None
+
+
+class APIConfigTestRequest(BaseModel):
+    """API配置测试请求模型"""
+    provider: APIProvider
+    api_key: str
+    custom_api_url: Optional[str] = None
+    custom_model_name: Optional[str] = None
+    test_message: str = "你好，这是一个连接测试。"
+
+
+class APIConfigTestResponse(BaseModel):
+    """API配置测试响应模型"""
+    success: bool
+    message: str
+    provider: str
+    model_name: Optional[str] = None
+    response_preview: Optional[str] = None
+    latency: Optional[float] = None
+
+
 # 模板相关模式
 class PPTTemplateBase(BaseModel):
     name: str

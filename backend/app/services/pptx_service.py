@@ -91,44 +91,63 @@ class PPTXService:
         template_info: Dict[str, Any]
     ) -> Dict[str, Any]:
         """创建演示文稿"""
+        print("🚀 开始创建演示文稿")
+        print(f"📋 大纲长度: {len(outline)} 字符")
+        print(f"🎨 模板信息: {template_info}")
+        print(f"📊 内容数据: {len(str(content_data))} 字符")
+        
         try:
             # 生成文件名
             timestamp = int(time.time())
             filename = f"generated_ppt_{timestamp}.pptx"
             output_path = self.output_dir / filename
+            print(f"📁 生成文件路径: {output_path}")
             
             # 创建演示文稿
+            print("📄 创建新的演示文稿对象")
             prs = Presentation()
             
             # 设置幻灯片尺寸为16:9
+            print("📐 设置幻灯片尺寸为16:9")
             prs.slide_width = Inches(13.33)
             prs.slide_height = Inches(7.5)
             
             # 获取模版配置
             template_name = template_info.get('name', '商务蓝')
             template_config = self.template_configs.get(template_name, self.template_configs['商务蓝'])
+            print(f"🎨 使用模板: {template_name}")
             
             # 从大纲提取标题
             lines = outline.strip().split('\n')
             presentation_title = lines[0].lstrip('# ').strip() if lines else "AI生成的演示文稿"
+            print(f"📝 演示文稿标题: {presentation_title}")
             
             # 创建增强的标题页
+            print("🏠 创建标题页...")
             await self._create_enhanced_title_slide_with_images(prs, presentation_title, template_info, template_config)
             
             # 处理生成的内容
             slides_data = content_data.get('slides', [])
+            print(f"📑 找到 {len(slides_data)} 个内容页")
+            
             if slides_data:
+                print("📄 创建内容页...")
                 for i, slide_data in enumerate(slides_data):
+                    print(f"  - 创建第 {i+1} 页: {slide_data.get('title', '无标题')}")
                     await self._create_diverse_content_slide(prs, slide_data, template_config, i)
             else:
+                print("📄 从大纲生成基本幻灯片...")
                 # 如果没有详细内容，从大纲生成基本幻灯片
                 await self._create_slides_from_outline_enhanced(prs, outline, template_config)
             
             # 创建增强的结束页
+            print("🔚 创建结束页...")
             await self._create_enhanced_end_slide_with_images(prs, template_config)
             
             # 保存文件
+            print(f"💾 保存PPT文件到: {output_path}")
             prs.save(output_path)
+            print("✅ PPT文件保存成功!")
             
             # 获取文件信息
             file_size = output_path.stat().st_size
@@ -417,14 +436,17 @@ class PPTXService:
             subtitle_shape.text = f"基于 AI 技术生成\n模版风格：{template_info.get('name', '未知')}"
             self._style_subtitle_text(subtitle_shape, template_config)
         
-        # 根据模版类型添加背景图片
+        # 跳过图片搜索，避免卡死问题
         try:
-            category = template_config.get('category', '商务')
-            images = await self.image_service.search_images("background", category, 1)
-            if images:
-                await self._add_background_image(slide, images[0], template_config)
+            print("⚠️ 暂时跳过背景图片添加，确保PPT生成流畅")
+            # category = template_config.get('category', '商务')
+            # images = await self.image_service.search_images("background", category, 1)
+            # if images:
+            #     await self._add_background_image(slide, images[0], template_config)
         except Exception as e:
             print(f"添加背景图片失败: {e}")
+        
+        print("✅ 标题页创建完成（无背景图片模式）")
     
     async def _create_diverse_content_slide(self, prs: Presentation, slide_data: Dict[str, Any], template_config: Dict[str, Any], slide_index: int):
         """创建多样化内容页"""
@@ -456,22 +478,18 @@ class PPTXService:
             slide.shapes.title.text = title
             self._style_title_text(slide.shapes.title, template_config, size=36)
         
-        # 获取相关图片
+        # 跳过图片搜索，直接使用标准布局
         try:
-            keywords = self.image_service.get_image_keywords_from_content(title)
-            category = template_config.get('category', '商务')
-            images = await self.image_service.search_images(keywords[0] if keywords else "business", category, 1)
+            print("⚠️ 暂时跳过内容页图片搜索，使用标准布局")
+            # keywords = self.image_service.get_image_keywords_from_content(title)
+            # category = template_config.get('category', '商务')
+            # images = await self.image_service.search_images(keywords[0] if keywords else "business", category, 1)
             
-            if images and layout_type == 'image_focus':
-                # 图片主导布局
-                await self._add_large_image(slide, images[0], template_config)
-                await self._add_compact_content(slide, slide_data, template_config)
-            else:
-                # 平衡布局
-                await self._add_side_image(slide, images[0] if images else None, template_config)
-                await self._add_main_content(slide, slide_data, template_config)
+            # 直接使用标准布局，无图片模式
+            await self._add_main_content(slide, slide_data, template_config)
+            print("✅ 内容页创建完成（无图片模式）")
         except Exception as e:
-            print(f"创建图片内容页失败: {e}")
+            print(f"创建内容页失败: {e}")
             # 回退到标准布局
             await self._add_main_content(slide, slide_data, template_config)
     
@@ -525,13 +543,16 @@ class PPTXService:
             slide.shapes.title.text = title
             self._style_title_text(slide.shapes.title, template_config, size=36)
         
-        # 添加数据相关的图片
+        # 跳过数据图表图片搜索
         try:
-            images = await self.image_service.search_images("chart data visualization", template_config.get('category'), 1)
-            if images:
-                await self._add_chart_placeholder(slide, images[0], template_config)
+            print("⚠️ 暂时跳过数据图表图片搜索，确保PPT生成流畅")
+            # images = await self.image_service.search_images("chart data visualization", template_config.get('category'), 1)
+            # if images:
+            #     await self._add_chart_placeholder(slide, images[0], template_config)
         except Exception as e:
             print(f"添加数据图表失败: {e}")
+        
+        print("✅ 数据页创建完成（无图表图片模式）")
         
         # 添加内容
         await self._add_main_content(slide, slide_data, template_config)
@@ -600,14 +621,17 @@ class PPTXService:
             subtitle_shape.text = "感谢您的聆听\n期待您的反馈\n\n由 AI-PPTX 自动生成"
             self._style_subtitle_text(subtitle_shape, template_config)
         
-        # 添加装饰性图片
+        # 跳过装饰性图片，避免卡死问题
         try:
-            category = template_config.get('category', '商务')
-            images = await self.image_service.search_images("thank you conclusion", category, 1)
-            if images:
-                await self._add_decorative_image(slide, images[0], template_config)
+            print("⚠️ 暂时跳过结束页图片添加，确保PPT生成流畅")
+            # category = template_config.get('category', '商务')
+            # images = await self.image_service.search_images("thank you conclusion", category, 1)
+            # if images:
+            #     await self._add_decorative_image(slide, images[0], template_config)
         except Exception as e:
             print(f"添加结束页图片失败: {e}")
+        
+        print("✅ 结束页创建完成（无装饰图片模式）")
     
     # 辅助方法
     def _set_slide_background(self, slide, template_config: Dict[str, Any]):

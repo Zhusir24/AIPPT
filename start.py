@@ -77,8 +77,8 @@ def start_backend():
             else:
                 print("❌ 后端服务启动失败")
                 return None
-        except:
-            print("⚠️ 后端服务可能仍在启动中...")
+        except Exception as e:
+            print(f"⚠️ 后端服务可能仍在启动中: {e}")
             return process
             
     except Exception as e:
@@ -102,10 +102,12 @@ def start_frontend():
         
         # 切换到前端目录
         original_cwd = os.getcwd()
-        os.chdir(frontend_dir)
         
-        # 创建HTTP服务器
+        # 创建HTTP服务器，指定目录
         class QuietHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, directory=frontend_dir, **kwargs)
+                
             def do_GET(self):
                 # 如果访问根路径，重定向到index.html
                 if self.path == '/' or self.path == '':
@@ -125,9 +127,6 @@ def start_frontend():
         server_thread = threading.Thread(target=run_server)
         server_thread.daemon = True
         server_thread.start()
-        
-        # 恢复原工作目录
-        os.chdir(original_cwd)
         
         # 等待前端启动
         time.sleep(2)
