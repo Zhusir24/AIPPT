@@ -183,8 +183,9 @@ async def health_check():
     # 检查数据库连接
     try:
         from app.core.database import engine
+        from sqlalchemy import text
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         db_status = "ok"
         logger.debug("✅ 数据库连接正常")
     except Exception as e:

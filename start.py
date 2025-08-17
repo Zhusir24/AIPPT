@@ -106,6 +106,12 @@ def start_frontend():
         
         # 创建HTTP服务器
         class QuietHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+            def do_GET(self):
+                # 如果访问根路径，重定向到index.html
+                if self.path == '/' or self.path == '':
+                    self.path = '/index.html'
+                super().do_GET()
+                
             def log_message(self, format, *args):
                 # 减少日志输出
                 pass

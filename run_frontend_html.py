@@ -39,6 +39,12 @@ def main():
     class QuietHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         """安静的HTTP请求处理器，减少日志输出"""
         
+        def do_GET(self):
+            # 如果访问根路径，重定向到index.html
+            if self.path == '/' or self.path == '':
+                self.path = '/index.html'
+            super().do_GET()
+        
         def log_message(self, format, *args):
             # 只记录重要信息
             if "GET / " in format % args or "404" in format % args:
