@@ -337,6 +337,33 @@ class AIPPTXApp {
         this.currentStep = step;
         this.updateUI();
         this.updateProgress();
+
+        // 如果进入步骤4（生成PPT），自动开始生成
+        if (step === 4) {
+            console.log('🎯 进入步骤4，检查自动生成PPT条件');
+            console.log('📋 检查数据:', {
+                hasOutline: !!this.projectData.outlineContent,
+                hasTemplate: !!this.projectData.templateId,
+                outlineLength: this.projectData.outlineContent ? this.projectData.outlineContent.length : 0,
+                templateId: this.projectData.templateId
+            });
+            
+            if (this.projectData.outlineContent && this.projectData.templateId) {
+                console.log('✅ 条件满足，500ms后自动开始生成PPT');
+                setTimeout(() => {
+                    console.log('⏰ 延迟时间到，开始调用generatePPT');
+                    this.generatePPT();
+                }, 500); // 稍微延迟以确保UI更新完成
+            } else {
+                console.log('❌ 条件不满足，不会自动生成PPT');
+                if (!this.projectData.outlineContent) {
+                    console.log('  - 缺少大纲内容');
+                }
+                if (!this.projectData.templateId) {
+                    console.log('  - 缺少模板选择');
+                }
+            }
+        }
     }
 
     /**
@@ -708,25 +735,38 @@ class AIPPTXApp {
      * @param {number} templateId 
      * @param {Element} cardElement 
      */
-    selectTemplate(templateId, cardElement) {
-        // 移除其他选中状态
-        document.querySelectorAll('.template-card').forEach(card => {
-            card.classList.remove('selected');
-        });
+    async selectTemplate(templateId, cardElement) {
+        this.showToast('正在获取模板详情...', 'info');
+        
+        try {
+            // 调用后端API获取模板详情
+            const templateDetail = await apiClient.getTemplate(templateId);
+            console.log('📋 获取到模板详情:', templateDetail);
+            
+            // 移除其他选中状态
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.classList.remove('selected');
+            });
 
-        // 选中当前模板
-        cardElement.classList.add('selected');
-        this.projectData.templateId = templateId;
+            // 选中当前模板
+            cardElement.classList.add('selected');
+            this.projectData.templateId = templateId;
+            this.projectData.templateDetail = templateDetail; // 保存模板详情
 
-        // 启用下一步按钮
-        const nextBtn = document.getElementById('btn-next-3');
-        if (nextBtn) nextBtn.disabled = false;
+            // 启用下一步按钮
+            const nextBtn = document.getElementById('btn-next-3');
+            if (nextBtn) nextBtn.disabled = false;
 
-        // 标记步骤3完成
-        this.markStepCompleted(3);
+            // 标记步骤3完成
+            this.markStepCompleted(3);
 
-        this.updateStatusDisplay();
-        this.showToast('模板选择成功', 'success');
+            this.updateStatusDisplay();
+            this.showToast(`模板选择成功：${templateDetail.name}`, 'success');
+            
+        } catch (error) {
+            console.error('获取模板详情失败:', error);
+            this.showToast(`模板选择失败：${error.message}`, 'error');
+        }
     }
 
     /**
@@ -779,8 +819,29 @@ class AIPPTXApp {
      * 生成PPT
      */
     async generatePPT() {
+        console.log('🚀 开始生成PPT方法调用');
+        console.log('📋 当前项目数据:', {
+            outlineLength: this.projectData.outlineContent ? this.projectData.outlineContent.length : 0,
+            templateId: this.projectData.templateId,
+            currentStep: this.currentStep
+        });
+        
         if (this.currentStep !== 4) {
+            console.log('🔄 当前不在步骤4，跳转到步骤4');
             this.goToStep(4);
+        }
+
+        // 验证必要数据
+        if (!this.projectData.outlineContent) {
+            console.error('❌ 缺少大纲内容');
+            this.showToast('缺少大纲内容，请先生成大纲', 'error');
+            return;
+        }
+        
+        if (!this.projectData.templateId) {
+            console.error('❌ 缺少模板ID');
+            this.showToast('缺少模板选择，请先选择模板', 'error');
+            return;
         }
 
         const loadingContainer = document.getElementById('generate-loading');
@@ -794,12 +855,22 @@ class AIPPTXApp {
             // 更新进度文本
             if (progressText) progressText.textContent = '正在准备生成...';
 
-            const result = await apiClient.generatePPT({
+            console.log('📤 发送PPT生成请求到后端...');
+            const requestData = {
                 outline: this.projectData.outlineContent,
                 template_id: this.projectData.templateId
+            };
+            console.log('📦 请求数据:', {
+                outlineLength: requestData.outline.length,
+                templateId: requestData.template_id
             });
 
-            this.projectData.generatedFile = result.file_path;
+            const result = await apiClient.generatePPT(requestData);
+            console.log('✅ PPT生成成功，结果:', result);
+
+            // 处理后端返回的BaseResponse格式
+            const pptData = result.data || result;
+            this.projectData.generatedFile = pptData.filename || pptData.file_path;
 
             // 更新下载链接
             const downloadBtn = document.getElementById('btn-download');
@@ -818,7 +889,7 @@ class AIPPTXApp {
             this.showToast('PPT生成成功', 'success');
 
         } catch (error) {
-            console.error('Generate PPT error:', error);
+            console.error('❌ PPT生成失败:', error);
             this.showToast(`PPT生成失败：${error.message}`, 'error');
             
             if (loadingContainer) loadingContainer.style.display = 'none';

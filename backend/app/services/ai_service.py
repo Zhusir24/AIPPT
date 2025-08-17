@@ -676,16 +676,24 @@ class AIService:
     
     def _parse_content_to_slides(self, content: str) -> Dict[str, Any]:
         """解析生成的内容为幻灯片格式"""
+        self.logger.debug(f"🔍 开始解析内容，长度: {len(content)} 字符")
+        self.logger.debug(f"📄 内容前500字符: {content[:500]}...")
+        
         try:
             # 尝试解析 JSON 格式的内容
-            return json.loads(content)
+            parsed_json = json.loads(content)
+            self.logger.debug("✅ 内容为JSON格式，直接返回")
+            return parsed_json
         except json.JSONDecodeError:
+            self.logger.debug("⚠️ 内容非JSON格式，进行文本解析")
             # 如果不是 JSON 格式，则进行简单的文本解析
             lines = content.strip().split('\n')
             slides = []
             current_slide = None
             
-            for line in lines:
+            self.logger.debug(f"📝 总行数: {len(lines)}")
+            
+            for i, line in enumerate(lines):
                 line = line.strip()
                 if not line:
                     continue
@@ -693,6 +701,7 @@ class AIService:
                 if line.startswith('#'):
                     if current_slide:
                         slides.append(current_slide)
+                        self.logger.debug(f"📄 完成幻灯片: {current_slide['title']}")
                     
                     title = line.lstrip('#').strip()
                     current_slide = {
@@ -701,12 +710,16 @@ class AIService:
                         "content": [],
                         "section": len(slides) + 1
                     }
+                    self.logger.debug(f"🆕 新幻灯片: {title}")
                 elif line.startswith('-') and current_slide:
                     current_slide["content"].append(line[1:].strip())
+                    self.logger.debug(f"➕ 添加内容: {line[1:].strip()}")
             
             if current_slide:
                 slides.append(current_slide)
+                self.logger.debug(f"📄 完成最后幻灯片: {current_slide['title']}")
             
+            self.logger.debug(f"🎯 解析完成，共 {len(slides)} 张幻灯片")
             return {"slides": slides}
     
     def _apply_custom_config(self, api_key: str, api_url: str, model_name: str):
