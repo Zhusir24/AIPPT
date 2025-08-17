@@ -9,7 +9,7 @@
 - 🎨 **模板系统**：提供多种精美 PPT 模板
 - 👀 **在线预览**：支持生成的 PPT 在线预览
 - 📤 **多格式导出**：支持导出 PPTX、PDF 等格式
-- 🌐 **现代化界面**：基于 Streamlit 的美观用户界面
+- 🌐 **现代化界面**：基于 HTML5 的响应式美观用户界面
 
 ## 项目结构
 
@@ -23,26 +23,42 @@ ai-pptx-python/
 │   │   ├── services/       # 业务服务
 │   │   └── utils/          # 工具函数
 │   └── main.py             # 后端入口
-├── frontend/               # Streamlit 前端
-│   ├── components/         # UI 组件
-│   ├── pages/             # 页面
-│   └── main.py            # 前端入口
+├── frontend_html/          # HTML 前端
+│   ├── css/               # 样式文件
+│   ├── js/                # JavaScript 文件
+│   └── index.html         # 主页面
 ├── templates/             # PPT 模板文件
 ├── static/               # 静态资源
 ├── tests/                # 测试文件
+├── start.py              # 一键启动脚本
 ├── requirements.txt      # 依赖包
 └── README.md            # 项目说明
 ```
 
 ## 快速开始
 
-### 1. 安装依赖
+### 方式一：一键启动（推荐）
+
+```bash
+# 自动安装依赖、启动前后端服务、打开浏览器
+python3 start.py
+```
+
+这将自动完成：
+- ✅ 检查和安装依赖包
+- 🚀 启动后端服务（http://localhost:8000）
+- 🎨 启动HTML前端（http://localhost:8080）
+- 🌐 自动打开浏览器
+
+### 方式二：手动启动
+
+#### 1. 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 配置环境变量
+#### 2. 配置环境变量
 
 创建 `.env` 文件：
 
@@ -60,23 +76,26 @@ APP_NAME=AI-PPTX
 DEBUG=True
 ```
 
-### 3. 启动后端服务
+#### 3. 启动后端服务
 
 ```bash
 cd backend
 uvicorn main:app --reload --port 8000
 ```
 
-### 4. 启动前端界面
+#### 4. 启动HTML前端
 
 ```bash
-cd frontend
-streamlit run main.py --server.port 8501
+# 方式1：使用脚本
+./run_html_frontend.sh
+
+# 方式2：使用Python
+python3 run_frontend_html.py
 ```
 
-### 5. 访问应用
+#### 5. 访问应用
 
-打开浏览器访问：http://localhost:8501
+打开浏览器访问：http://localhost:8080
 
 ## 使用说明
 
@@ -87,13 +106,29 @@ streamlit run main.py --server.port 8501
 5. **生成 PPT**：系统自动生成完整的 PPTX 文件
 6. **预览导出**：在线预览并导出所需格式
 
+## 界面特色
+
+### 🎨 现代化HTML前端
+- ✨ **美观设计**：渐变背景、流畅动画、响应式布局
+- 🚀 **快速响应**：纯前端技术，无Python运行时依赖
+- 📱 **跨设备适配**：完美支持桌面、平板、手机访问
+- 🎯 **用户体验**：直观的进度指示器和交互反馈
+
+### 🛠️ 功能亮点
+- 📊 **动态进度条**：实时显示生成进度，步骤可视化
+- 🔄 **智能状态管理**：自动保存用户输入和操作状态
+- 📁 **拖拽上传**：支持文件拖拽上传，操作更便捷
+- ⚙️ **设置管理**：可配置API服务、界面主题等选项
+- 🌐 **浏览器兼容**：支持Chrome、Firefox、Safari、Edge等主流浏览器
+
 ## 技术栈
 
 - **后端**：FastAPI + SQLAlchemy + SQLite
-- **前端**：Streamlit + Python
+- **前端**：HTML5 + CSS3 + JavaScript ES6+
 - **AI 服务**：OpenAI/DeepSeek API
 - **PPT 处理**：python-pptx
 - **文档处理**：python-docx + BeautifulSoup
+- **服务部署**：Python HTTP Server
 
 ## 开源协议
 

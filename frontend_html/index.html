@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-PPTX 演示文稿生成器</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🎯 操作导航</h2>
+            </div>
+            
+            <div class="sidebar-nav">
+                <button class="nav-btn" data-step="1" id="btn-input">
+                    📝 输入内容
+                </button>
+                <button class="nav-btn" data-step="2" id="btn-outline">
+                    🧠 生成大纲
+                </button>
+                <button class="nav-btn" data-step="3" id="btn-template">
+                    🎨 选择模板
+                </button>
+                <button class="nav-btn" data-step="4" id="btn-generate">
+                    ⚡ 生成PPT
+                </button>
+            </div>
+            
+            <div class="sidebar-divider"></div>
+            
+            <div class="sidebar-actions">
+                <button class="action-btn settings-btn" id="btn-settings">
+                    ⚙️ 系统设置
+                </button>
+                <button class="action-btn restart-btn" id="btn-restart">
+                    🔄 重新开始
+                </button>
+            </div>
+            
+            <div class="sidebar-divider"></div>
+            
+            <div class="sidebar-status">
+                <h3>📊 项目状态</h3>
+                <div class="status-item">
+                    <strong>标题：</strong>
+                    <span id="status-title">未设置</span>
+                </div>
+                <div class="status-item">
+                    <strong>输入长度：</strong>
+                    <span id="status-length">0 字符</span>
+                </div>
+                <div class="status-item" id="status-outline" style="display: none;">
+                    ✅ 大纲已生成
+                </div>
+                <div class="status-item" id="status-template" style="display: none;">
+                    ✅ 模板已选择
+                </div>
+                <div class="status-item" id="status-ppt" style="display: none;">
+                    ✅ PPT 已生成
+                </div>
+            </div>
+            
+            <div class="sidebar-divider"></div>
+            
+            <div class="sidebar-tips">
+                <h3>💡 使用提示</h3>
+                <ol>
+                    <li><strong>输入内容</strong>：可以输入主题、上传文件或提供网页链接</li>
+                    <li><strong>生成大纲</strong>：AI 会根据输入生成结构化大纲</li>
+                    <li><strong>选择模板</strong>：从多种专业模板中选择合适的设计</li>
+                    <li><strong>生成PPT</strong>：自动生成完整的演示文稿</li>
+                </ol>
+            </div>
+            
+            <div class="sidebar-divider"></div>
+            
+            <div class="sidebar-tech">
+                <h3>🔧 技术信息</h3>
+                <div class="tech-item">
+                    <strong>后端服务：</strong>
+                    <span id="backend-url">http://localhost:8000</span>
+                </div>
+                <div class="tech-item">
+                    <strong>AI 提供商：</strong>
+                    <span id="ai-provider">DeepSeek</span>
+                </div>
+                <div class="tech-item">
+                    <strong>当前步骤：</strong>
+                    <span id="current-step">1/4</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <p><strong>AI-PPTX v1.0</strong></p>
+                <p><em>HTML 版本</em></p>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 头部 -->
+            <header class="main-header">
+                <h1>🤖 AI-PPTX 演示文稿生成器</h1>
+                <p>使用人工智能技术，一键生成专业的 PowerPoint 演示文稿</p>
+            </header>
+
+            <!-- 进度条 -->
+            <div class="progress-container">
+                <div class="progress-title">📋 生成进度</div>
+                <div class="progress-steps">
+                    <div class="progress-line">
+                        <div class="progress-line-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-step" data-step="1">
+                        <div class="progress-step-icon current" id="icon-1">🔄</div>
+                        <div class="progress-step-label current">输入内容</div>
+                    </div>
+                    <div class="progress-step" data-step="2">
+                        <div class="progress-step-icon pending" id="icon-2">🧠</div>
+                        <div class="progress-step-label pending">生成大纲</div>
+                    </div>
+                    <div class="progress-step" data-step="3">
+                        <div class="progress-step-icon pending" id="icon-3">🎨</div>
+                        <div class="progress-step-label pending">选择模板</div>
+                    </div>
+                    <div class="progress-step" data-step="4">
+                        <div class="progress-step-icon pending" id="icon-4">⚡</div>
+                        <div class="progress-step-label pending">生成PPT</div>
+                    </div>
+                    <div class="progress-step" data-step="5">
+                        <div class="progress-step-icon pending" id="icon-5">🎉</div>
+                        <div class="progress-step-label pending">完成</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤内容区 -->
+            <div class="step-content">
+                <!-- 步骤1：输入内容 -->
+                <div class="step-panel active" id="step-1">
+                    <div class="step-card">
+                        <div class="step-header">
+                            <h2>📝 输入内容</h2>
+                            <p>请输入您想要制作PPT的主题或内容</p>
+                        </div>
+                        
+                        <div class="input-section">
+                            <div class="input-type-tabs">
+                                <button class="tab-btn active" data-type="topic">主题输入</button>
+                                <button class="tab-btn" data-type="file">文件上传</button>
+                                <button class="tab-btn" data-type="url">网页链接</button>
+                            </div>
+                            
+                            <div class="input-content">
+                                <!-- 主题输入 -->
+                                <div class="input-panel active" id="panel-topic">
+                                    <label for="topic-input">请输入您的PPT主题或描述：</label>
+                                    <textarea id="topic-input" placeholder="例如：人工智能在医疗领域的应用，请详细介绍AI技术如何改善医疗诊断和治疗..." rows="6"></textarea>
+                                </div>
+                                
+                                <!-- 文件上传 -->
+                                <div class="input-panel" id="panel-file">
+                                    <label for="file-input">上传文档文件：</label>
+                                    <div class="file-upload-area" id="file-upload">
+                                        <input type="file" id="file-input" accept=".pdf,.docx,.txt,.md" hidden>
+                                        <div class="upload-placeholder">
+                                            <div class="upload-icon">📁</div>
+                                            <p>点击或拖拽文件到此处</p>
+                                            <p class="upload-hint">支持 PDF、DOCX、TXT、MD 格式</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 网页链接 -->
+                                <div class="input-panel" id="panel-url">
+                                    <label for="url-input">输入网页链接：</label>
+                                    <input type="url" id="url-input" placeholder="https://example.com/article">
+                                    <p class="input-hint">AI 将自动提取网页内容作为PPT素材</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="step-actions">
+                            <button class="btn-primary" id="btn-next-1">下一步：生成大纲 →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤2：生成大纲 -->
+                <div class="step-panel" id="step-2">
+                    <div class="step-card">
+                        <div class="step-header">
+                            <h2>🧠 生成大纲</h2>
+                            <p>AI 正在根据您的输入生成结构化大纲</p>
+                        </div>
+                        
+                        <div class="outline-section">
+                            <div class="loading-container" id="outline-loading">
+                                <div class="loading-spinner"></div>
+                                <p>正在生成大纲，请稍候...</p>
+                            </div>
+                            
+                            <div class="outline-result" id="outline-result" style="display: none;">
+                                <div class="outline-header">
+                                    <h3>📋 生成的大纲</h3>
+                                    <button class="btn-secondary" id="btn-regenerate-outline">🔄 重新生成</button>
+                                </div>
+                                <div class="outline-content" id="outline-content"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="step-actions">
+                            <button class="btn-secondary" id="btn-prev-2">← 上一步</button>
+                            <button class="btn-primary" id="btn-next-2" disabled>下一步：选择模板 →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤3：选择模板 -->
+                <div class="step-panel" id="step-3">
+                    <div class="step-card">
+                        <div class="step-header">
+                            <h2>🎨 选择模板</h2>
+                            <p>选择适合您PPT的专业模板</p>
+                        </div>
+                        
+                        <div class="template-section">
+                            <div class="template-grid" id="template-grid">
+                                <!-- 模板将通过JavaScript动态加载 -->
+                            </div>
+                        </div>
+                        
+                        <div class="step-actions">
+                            <button class="btn-secondary" id="btn-prev-3">← 上一步</button>
+                            <button class="btn-primary" id="btn-next-3" disabled>下一步：生成PPT →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤4：生成PPT -->
+                <div class="step-panel" id="step-4">
+                    <div class="step-card">
+                        <div class="step-header">
+                            <h2>⚡ 生成PPT</h2>
+                            <p>AI 正在为您生成专业的PowerPoint演示文稿</p>
+                        </div>
+                        
+                        <div class="generate-section">
+                            <div class="loading-container" id="generate-loading">
+                                <div class="loading-spinner"></div>
+                                <p>正在生成PPT，请稍候...</p>
+                                <div class="progress-text" id="generate-progress">正在处理中...</div>
+                            </div>
+                            
+                            <div class="generate-result" id="generate-result" style="display: none;">
+                                <div class="success-message">
+                                    <div class="success-icon">🎉</div>
+                                    <h3>PPT 生成成功！</h3>
+                                    <p>您的演示文稿已经准备就绪</p>
+                                </div>
+                                
+                                <div class="download-section">
+                                    <a href="#" class="btn-download" id="btn-download">
+                                        📥 下载PPT文件
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="step-actions">
+                            <button class="btn-secondary" id="btn-prev-4">← 上一步</button>
+                            <button class="btn-primary" id="btn-restart-final">🔄 重新开始</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 页面底部 -->
+            <footer class="main-footer">
+                <p>🚀 基于 FastAPI + HTML 构建 | 💡 支持 OpenAI、DeepSeek 等多种 AI 模型</p>
+                <p>📧 如有问题请联系技术支持 | 🔗 <a href="http://localhost:8000/docs" target="_blank">查看 API 文档</a></p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ 系统设置</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="api">API 配置</button>
+                    <button class="settings-tab" data-tab="ui">界面设置</button>
+                    <button class="settings-tab" data-tab="about">关于</button>
+                </div>
+                
+                <div class="settings-content">
+                    <!-- API 配置 -->
+                    <div class="settings-panel active" id="settings-api">
+                        <h3>🔗 API 配置</h3>
+                        <div class="form-group">
+                            <label for="backend-url-input">后端服务地址：</label>
+                            <input type="url" id="backend-url-input" value="http://localhost:8000">
+                        </div>
+                        <div class="form-group">
+                            <label for="ai-provider-select">AI 提供商：</label>
+                            <select id="ai-provider-select">
+                                <option value="openai">OpenAI (GPT-3.5/GPT-4)</option>
+                                <option value="deepseek" selected>DeepSeek</option>
+                                <option value="anthropic">Anthropic (Claude)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="api-key-input">API 密钥：</label>
+                            <input type="password" id="api-key-input" placeholder="请输入API密钥">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-secondary" id="btn-test-connection">🔍 测试连接</button>
+                            <button class="btn-primary" id="btn-save-settings">💾 保存设置</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 界面设置 -->
+                    <div class="settings-panel" id="settings-ui">
+                        <h3>🎨 界面设置</h3>
+                        <div class="form-group">
+                            <label for="theme-select">主题颜色：</label>
+                            <select id="theme-select">
+                                <option value="blue" selected>蓝色</option>
+                                <option value="green">绿色</option>
+                                <option value="purple">紫色</option>
+                                <option value="orange">橙色</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="auto-save-check" checked>
+                                自动保存项目
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="show-tips-check" checked>
+                                显示操作提示
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 关于 -->
+                    <div class="settings-panel" id="settings-about">
+                        <h3>ℹ️ 关于 AI-PPTX</h3>
+                        <div class="about-content">
+                            <h4>🤖 AI-PPTX HTML 版本</h4>
+                            <p>基于现代Web技术构建的AI自动生成PPT系统。</p>
+                            
+                            <h4>✨ 主要特性</h4>
+                            <ul>
+                                <li>🧠 智能生成：使用先进的大语言模型</li>
+                                <li>🎨 多样模板：提供多种专业设计模板</li>
+                                <li>📱 现代界面：基于HTML5的响应式设计</li>
+                                <li>🔧 易于部署：纯前端技术，部署简单</li>
+                            </ul>
+                            
+                            <h4>🛠️ 技术栈</h4>
+                            <ul>
+                                <li>前端：HTML5 + CSS3 + JavaScript</li>
+                                <li>后端：FastAPI + SQLAlchemy</li>
+                                <li>AI 服务：OpenAI / DeepSeek / Anthropic</li>
+                            </ul>
+                            
+                            <div class="version-info">
+                                <p><strong>版本：</strong>v1.0.0</p>
+                                <p><strong>构建时间：</strong>2024-12-19</p>
+                                <p><strong>许可证：</strong>GPL-3.0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息提示 -->
+    <div class="toast" id="toast">
+        <div class="toast-content" id="toast-content"></div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

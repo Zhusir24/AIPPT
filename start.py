@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 AI-PPTX 一键启动脚本
-同时启动前端和后端服务
+同时启动HTML前端和后端服务
 """
 
 import os
@@ -87,42 +87,67 @@ def start_backend():
 
 
 def start_frontend():
-    """启动前端服务"""
-    print("🎨 启动前端界面...")
-    frontend_dir = Path("frontend")
+    """启动HTML前端服务"""
+    print("🎨 启动HTML前端界面...")
+    frontend_dir = Path("frontend_html")
     
     if not frontend_dir.exists():
-        print("❌ frontend 目录不存在")
+        print("❌ frontend_html 目录不存在")
         return None
     
     try:
-        env = os.environ.copy()
-        env['PYTHONPATH'] = str(Path.cwd())
+        import http.server
+        import socketserver
+        import threading
         
-        process = subprocess.Popen(
-            [sys.executable, "-m", "streamlit", "run", "main.py", "--server.port", "8501"],
-            cwd=frontend_dir,
-            env=env
-        )
+        # 切换到前端目录
+        original_cwd = os.getcwd()
+        os.chdir(frontend_dir)
+        
+        # 创建HTTP服务器
+        class QuietHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+            def log_message(self, format, *args):
+                # 减少日志输出
+                pass
+        
+        httpd = socketserver.TCPServer(("localhost", 8080), QuietHTTPRequestHandler)
+        
+        # 在新线程中运行服务器
+        def run_server():
+            httpd.serve_forever()
+        
+        server_thread = threading.Thread(target=run_server)
+        server_thread.daemon = True
+        server_thread.start()
+        
+        # 恢复原工作目录
+        os.chdir(original_cwd)
         
         # 等待前端启动
-        time.sleep(5)
-        print("✅ 前端界面启动成功: http://localhost:8501")
-        return process
+        time.sleep(2)
+        print("✅ HTML前端界面启动成功: http://localhost:8080")
+        
+        # 返回服务器对象而不是进程
+        return httpd
         
     except Exception as e:
-        print(f"❌ 启动前端界面失败: {e}")
+        print(f"❌ 启动HTML前端界面失败: {e}")
+        # 确保恢复工作目录
+        try:
+            os.chdir(original_cwd)
+        except:
+            pass
         return None
 
 
 def open_browser():
     """打开浏览器"""
-    time.sleep(8)  # 等待服务完全启动
+    time.sleep(5)  # 等待服务完全启动
     try:
-        webbrowser.open("http://localhost:8501")
+        webbrowser.open("http://localhost:8080")
         print("🌐 已自动打开浏览器")
     except:
-        print("⚠️ 无法自动打开浏览器，请手动访问: http://localhost:8501")
+        print("⚠️ 无法自动打开浏览器，请手动访问: http://localhost:8080")
 
 
 def main():
@@ -160,7 +185,7 @@ def main():
     
     print("\n" + "=" * 50)
     print("🎉 AI-PPTX 启动完成！")
-    print("🌐 前端地址: http://localhost:8501")
+    print("🌐 HTML前端: http://localhost:8080")
     print("📚 后端API: http://localhost:8000/docs")
     print("💡 按 Ctrl+C 停止服务")
     print("=" * 50)
@@ -172,9 +197,12 @@ def main():
     except KeyboardInterrupt:
         print("\n🛑 正在停止服务...")
         
-        # 终止进程
+        # 终止服务
         if frontend_process:
-            frontend_process.terminate()
+            try:
+                frontend_process.shutdown()
+            except:
+                pass
         if backend_process:
             backend_process.terminate()
         
