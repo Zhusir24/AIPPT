@@ -19,19 +19,38 @@ from pptx.enum.shapes import MSO_SHAPE
 from ..core.config import settings
 from .image_service import ImageService
 
+# 导入 SVG 转换相关库
+try:
+    import cairosvg
+    from PIL import Image
+    import io
+    SVG_SUPPORT = True
+except ImportError:
+    SVG_SUPPORT = False
+
 
 class PPTXService:
     """PPT 生成服务类"""
     
     def __init__(self):
-        self.template_dir = Path(settings.TEMPLATE_DIR)
-        self.output_dir = Path(settings.UPLOAD_DIR)
-        self.static_dir = Path(settings.STATIC_DIR)
+        # 确保使用绝对路径
+        self.template_dir = Path(settings.TEMPLATE_DIR).resolve()
+        self.output_dir = Path(settings.UPLOAD_DIR).resolve()
+        self.static_dir = Path(settings.STATIC_DIR).resolve()
         self.output_dir.mkdir(exist_ok=True)
         self.static_dir.mkdir(exist_ok=True)
         
+        # 打印调试信息
+        print(f"🔍 PPTXService 初始化路径:")
+        print(f"   TEMPLATE_DIR: {self.template_dir}")
+        print(f"   OUTPUT_DIR: {self.output_dir}")
+        print(f"   模板目录是否存在: {self.template_dir.exists()}")
+        
         # 图片服务
         self.image_service = ImageService()
+        
+        # 模板JSON配置缓存
+        self.template_json_cache = {}
         
         # 模版特定配置
         self.template_configs = {
@@ -436,17 +455,38 @@ class PPTXService:
             subtitle_shape.text = f"基于 AI 技术生成\n模版风格：{template_info.get('name', '未知')}"
             self._style_subtitle_text(subtitle_shape, template_config)
         
-        # 跳过图片搜索，避免卡死问题
-        try:
-            print("⚠️ 暂时跳过背景图片添加，确保PPT生成流畅")
-            # category = template_config.get('category', '商务')
-            # images = await self.image_service.search_images("background", category, 1)
-            # if images:
-            #     await self._add_background_image(slide, images[0], template_config)
-        except Exception as e:
-            print(f"添加背景图片失败: {e}")
+        # 加载并应用模板JSON配置
+        template_name = template_info.get('name', '商务蓝')
+        template_json = self._load_template_json(template_name)
         
-        print("✅ 标题页创建完成（无背景图片模式）")
+        if template_json:
+            # 获取封面页配置
+            cover_config = self._get_template_slide_config(template_json, 'cover')
+            if cover_config and 'elements' in cover_config:
+                # 获取模板文件夹名
+                template_mapping = {
+                    "商务蓝": "business_blue",
+                    "自然绿": "nature_green", 
+                    "简约白": "simple_white",
+                    "科技紫": "tech_purple",
+                    "活力橙": "vibrant_orange"
+                }
+                template_folder = template_mapping.get(template_name, "business_blue")
+                
+                # 添加图片元素
+                image_elements = [elem for elem in cover_config['elements'] if elem.get('type') == 'image']
+                if image_elements:
+                    print(f"📸 开始添加 {len(image_elements)} 个图片元素到封面页")
+                    self._add_template_elements(slide, image_elements, template_folder)
+                    print("✅ 封面页图片元素添加完成")
+                else:
+                    print("ℹ️ 封面页配置中未找到图片元素")
+            else:
+                print("ℹ️ 未找到封面页配置")
+        else:
+            print("⚠️ 未能加载模板JSON配置，使用默认样式")
+        
+        print("✅ 标题页创建完成")
     
     async def _create_diverse_content_slide(self, prs: Presentation, slide_data: Dict[str, Any], template_config: Dict[str, Any], slide_index: int):
         """创建多样化内容页"""
@@ -528,6 +568,9 @@ class PPTXService:
         else:
             # 内容不足，使用标准布局
             await self._add_main_content(slide, slide_data, template_config)
+        
+        # 添加模板图片元素
+        await self._add_content_template_images(slide, template_config)
     
     async def _create_data_visual_slide(self, prs: Presentation, slide_data: Dict[str, Any], template_config: Dict[str, Any]):
         """创建数据可视化幻灯片"""
@@ -556,6 +599,9 @@ class PPTXService:
         
         # 添加内容
         await self._add_main_content(slide, slide_data, template_config)
+        
+        # 添加模板图片元素
+        await self._add_content_template_images(slide, template_config)
     
     async def _create_standard_content_slide(self, prs: Presentation, slide_data: Dict[str, Any], template_config: Dict[str, Any]):
         """创建标准内容页"""
@@ -573,6 +619,9 @@ class PPTXService:
         
         # 添加内容
         await self._add_main_content(slide, slide_data, template_config)
+        
+        # 加载并应用模板JSON配置的图片元素
+        await self._add_content_template_images(slide, template_config)
     
     async def _create_slides_from_outline_enhanced(self, prs: Presentation, outline: str, template_config: Dict[str, Any]):
         """从大纲创建增强幻灯片"""
@@ -633,6 +682,210 @@ class PPTXService:
         
         print("✅ 结束页创建完成（无装饰图片模式）")
     
+    # 模板JSON配置读取方法
+    def _load_template_json(self, template_name: str) -> Optional[Dict[str, Any]]:
+        """加载模板JSON配置"""
+        if template_name in self.template_json_cache:
+            return self.template_json_cache[template_name]
+        
+        # 模板名称映射
+        template_mapping = {
+            "商务蓝": "business_blue",
+            "自然绿": "nature_green", 
+            "简约白": "simple_white",
+            "科技紫": "tech_purple",
+            "活力橙": "vibrant_orange"
+        }
+        
+        template_folder = template_mapping.get(template_name)
+        if not template_folder:
+            print(f"⚠️ 未找到模板映射: {template_name}")
+            return None
+        
+        json_path = self.template_dir / template_folder / f"{template_folder}.json"
+        
+        try:
+            if json_path.exists():
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    template_json = json.load(f)
+                    self.template_json_cache[template_name] = template_json
+                    print(f"✅ 模板JSON配置加载成功: {template_name}")
+                    return template_json
+            else:
+                print(f"❌ 模板JSON文件不存在: {json_path}")
+                return None
+        except Exception as e:
+            print(f"❌ 加载模板JSON配置失败: {e}")
+            return None
+    
+    def _get_template_slide_config(self, template_json: Dict[str, Any], slide_type: str) -> Optional[Dict[str, Any]]:
+        """获取特定类型幻灯片的配置"""
+        if not template_json or 'slides' not in template_json:
+            return None
+        
+        for slide_config in template_json['slides']:
+            if slide_config.get('type') == slide_type:
+                return slide_config
+        
+        return None
+    
+    def _add_template_elements(self, slide, elements: List[Dict[str, Any]], template_folder: str):
+        """根据模板配置添加元素到幻灯片"""
+        for element in elements:
+            element_type = element.get('type')
+            
+            if element_type == 'image':
+                self._add_image_element(slide, element, template_folder)
+            elif element_type == 'text':
+                # 文本元素处理在其他地方进行
+                pass
+    
+    def _add_image_element(self, slide, image_config: Dict[str, Any], template_folder: str):
+        """添加图片元素到幻灯片"""
+        try:
+            # 获取图片路径
+            image_src = image_config.get('src')
+            if not image_src:
+                return
+            
+            image_path = self.template_dir / template_folder / image_src
+            
+            if not image_path.exists():
+                print(f"⚠️ 图片文件不存在: {image_path}")
+                return
+            
+            # 处理 SVG 格式图片
+            if image_path.suffix.lower() == '.svg':
+                if SVG_SUPPORT:
+                    # 尝试转换SVG为PNG
+                    converted_path = self._convert_svg_to_png(image_path)
+                    if converted_path:
+                        image_path = converted_path
+                        print(f"✅ SVG转换为PNG成功: {image_src}")
+                    else:
+                        print(f"⚠️ SVG转换失败，跳过图片: {image_src}")
+                        return
+                else:
+                    print(f"⚠️ 缺少SVG转换库，跳过SVG图片: {image_src}")
+                    return
+            
+            # 检查文件是否为支持的图片格式
+            supported_formats = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff'}
+            if image_path.suffix.lower() not in supported_formats:
+                print(f"⚠️ 不支持的图片格式: {image_src} ({image_path.suffix})")
+                return
+            
+            # 转换坐标和尺寸（从EMU单位转换为英寸）
+            x = image_config.get('x', 0) / 914400  # EMU to inches
+            y = image_config.get('y', 0) / 914400
+            width = image_config.get('width', 1000000) / 914400
+            height = image_config.get('height', 1000000) / 914400
+            
+            # 添加图片到幻灯片
+            picture = slide.shapes.add_picture(
+                str(image_path), 
+                Inches(x), 
+                Inches(y), 
+                Inches(width), 
+                Inches(height)
+            )
+            
+            # 设置透明度（如果支持）
+            opacity = image_config.get('opacity', 1.0)
+            if hasattr(picture, 'fill') and opacity < 1.0:
+                try:
+                    picture.fill.transparency = 1.0 - opacity
+                except:
+                    pass  # 某些图片格式可能不支持透明度设置
+            
+            print(f"✅ 添加图片成功: {image_src}")
+            
+        except Exception as e:
+            print(f"❌ 添加图片失败: {e}")
+    
+    def _convert_svg_to_png(self, svg_path: Path) -> Optional[Path]:
+        """将SVG文件转换为PNG格式"""
+        try:
+            if not SVG_SUPPORT:
+                return None
+            
+            # 生成PNG文件路径
+            png_filename = svg_path.stem + '_converted.png'
+            png_path = self.static_dir / png_filename
+            
+            # 如果已经转换过，直接返回
+            if png_path.exists():
+                return png_path
+            
+            # 读取SVG文件
+            with open(svg_path, 'rb') as svg_file:
+                svg_data = svg_file.read()
+            
+            # 转换SVG为PNG
+            png_data = cairosvg.svg2png(
+                bytestring=svg_data,
+                output_width=800,  # 设置输出宽度
+                output_height=600  # 设置输出高度
+            )
+            
+            # 保存PNG文件
+            with open(png_path, 'wb') as png_file:
+                png_file.write(png_data)
+            
+            return png_path
+            
+        except Exception as e:
+            print(f"SVG转换为PNG失败: {e}")
+            return None
+    
+    async def _add_content_template_images(self, slide, template_config: Dict[str, Any]):
+        """为内容页添加模板配置的图片元素"""
+        try:
+            # 从template_config中获取模板名称
+            template_name = None
+            for name, config in self.template_configs.items():
+                if config == template_config:
+                    template_name = name
+                    break
+            
+            if not template_name:
+                template_name = "商务蓝"  # 默认值
+            
+            template_json = self._load_template_json(template_name)
+            
+            if template_json:
+                # 获取内容页配置（尝试多种内容页类型）
+                content_types = ['content_3x2', 'content_3x3', 'content_2x2', 'content_4x2', 
+                               'content_3x2_nature', 'content_2x3_nature', 'content_4x3', 
+                               'content_3x2_v2', 'content_3x3_v2']
+                
+                content_config = None
+                for content_type in content_types:
+                    content_config = self._get_template_slide_config(template_json, content_type)
+                    if content_config:
+                        break
+                
+                if content_config and 'elements' in content_config:
+                    # 获取模板文件夹名
+                    template_mapping = {
+                        "商务蓝": "business_blue",
+                        "自然绿": "nature_green", 
+                        "简约白": "simple_white",
+                        "科技紫": "tech_purple",
+                        "活力橙": "vibrant_orange"
+                    }
+                    template_folder = template_mapping.get(template_name, "business_blue")
+                    
+                    # 添加图片元素
+                    image_elements = [elem for elem in content_config['elements'] if elem.get('type') == 'image']
+                    if image_elements:
+                        print(f"📸 开始添加 {len(image_elements)} 个图片元素到内容页")
+                        self._add_template_elements(slide, image_elements, template_folder)
+                        print("✅ 内容页图片元素添加完成")
+                
+        except Exception as e:
+            print(f"❌ 添加内容页模板图片失败: {e}")
+
     # 辅助方法
     def _set_slide_background(self, slide, template_config: Dict[str, Any]):
         """设置幻灯片背景"""

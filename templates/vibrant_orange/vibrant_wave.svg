@@ -1,0 +1,48 @@
+<svg width="200" height="120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fff2cc;stop-opacity:0.8" />
+      <stop offset="25%" style="stop-color:#ffb74d;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f7931e;stop-opacity:1" />
+      <stop offset="75%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fff2cc;stop-opacity:0.8" />
+    </linearGradient>
+    <filter id="waveGlow">
+      <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 主波浪 -->
+  <path d="M0 80 Q50 40 100 80 T200 80" 
+        stroke="url(#waveGradient)" stroke-width="8" fill="none" filter="url(#waveGlow)"/>
+  
+  <!-- 第二层波浪 -->
+  <path d="M0 70 Q50 30 100 70 T200 70" 
+        stroke="#f7931e" stroke-width="4" fill="none" opacity="0.7"/>
+  
+  <!-- 第三层波浪 -->
+  <path d="M0 90 Q50 50 100 90 T200 90" 
+        stroke="#ff6b35" stroke-width="4" fill="none" opacity="0.7"/>
+  
+  <!-- 波浪填充 -->
+  <path d="M0 80 Q50 40 100 80 T200 80 L200 120 L0 120 Z" 
+        fill="url(#waveGradient)" opacity="0.3"/>
+  
+  <!-- 动态点 -->
+  <circle r="3" fill="#fff2cc">
+    <animateMotion dur="4s" repeatCount="indefinite">
+      <path d="M0 80 Q50 40 100 80 T200 80"/>
+    </animateMotion>
+    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- 装饰性点 -->
+  <circle cx="25" cy="65" r="2" fill="#ffb74d" opacity="0.8"/>
+  <circle cx="75" cy="95" r="2" fill="#f7931e" opacity="0.8"/>
+  <circle cx="125" cy="65" r="2" fill="#ff6b35" opacity="0.8"/>
+  <circle cx="175" cy="95" r="2" fill="#ffb74d" opacity="0.8"/>
+</svg>

@@ -1,0 +1,22 @@
+<svg width="300" height="225" xmlns="http://www.w3.org/2000/svg">
+  <!-- 简约白模板预览 -->
+  <rect width="300" height="225" fill="white" stroke="#e0e0e0" stroke-width="1"/>
+  
+  <!-- 标题区域 -->
+  <rect x="20" y="70" width="260" height="40" fill="#f5f5f5" rx="5"/>
+  <text x="150" y="95" text-anchor="middle" fill="#2e2e2e" font-family="Arial" font-size="16" font-weight="bold">演示文稿标题</text>
+  
+  <!-- 作者区域 -->
+  <text x="150" y="130" text-anchor="middle" fill="#666666" font-family="Arial" font-size="12">作者姓名</text>
+  
+  <!-- 装饰线条 -->
+  <line x1="50" y1="50" x2="250" y2="50" stroke="#4472c4" stroke-width="2"/>
+  <line x1="50" y1="175" x2="250" y2="175" stroke="#4472c4" stroke-width="1"/>
+  
+  <!-- 点装饰 -->
+  <circle cx="50" cy="95" r="3" fill="#4472c4"/>
+  <circle cx="250" cy="95" r="3" fill="#4472c4"/>
+  
+  <!-- 底部标识 -->
+  <text x="150" y="210" text-anchor="middle" fill="#666666" font-family="Arial" font-size="10">简约白</text>
+</svg>

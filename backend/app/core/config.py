@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     ANTHROPIC_MODEL: str = Field(default="claude-3-sonnet-20240229", env="ANTHROPIC_MODEL")
     
     # 文件配置
-    UPLOAD_DIR: str = Field(default="../uploads", env="UPLOAD_DIR")
+    UPLOAD_DIR: str = Field(default="./uploads", env="UPLOAD_DIR")
     MAX_FILE_SIZE: int = Field(default=50 * 1024 * 1024, env="MAX_FILE_SIZE")  # 50MB
     ALLOWED_EXTENSIONS: List[str] = Field(
         default=["pdf", "docx", "txt", "md"], 
@@ -39,8 +39,8 @@ class Settings(BaseSettings):
     )
     
     # 模板配置
-    TEMPLATE_DIR: str = Field(default="../templates", env="TEMPLATE_DIR")
-    STATIC_DIR: str = Field(default="../static", env="STATIC_DIR")
+    TEMPLATE_DIR: str = Field(default="./templates", env="TEMPLATE_DIR")
+    STATIC_DIR: str = Field(default="./static", env="STATIC_DIR")
     
     # PPT 生成配置
     DEFAULT_LANGUAGE: str = Field(default="中文", env="DEFAULT_LANGUAGE")

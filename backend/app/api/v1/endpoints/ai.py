@@ -239,7 +239,7 @@ async def generate_ppt(
         # 导入PPT生成服务
         logger.debug("📋 导入 PPTX 服务")
         try:
-            from ...services.pptx_service import PPTXService
+            from ....services.pptx_service import PPTXService
             logger.debug("✅ PPTX 服务导入成功")
             pptx_service = PPTXService()
             logger.debug("✅ PPTX 服务实例创建成功")
