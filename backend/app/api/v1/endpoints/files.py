@@ -8,7 +8,7 @@ from typing import List
 import os
 
 from ....core.database import get_db
-from ....models.schemas import FileUploadResponse, BaseResponse
+from ....models.schemas import FileUploadResponse, BaseResponse, UrlExtractRequest
 from ....services.file_service import FileService
 from ....core.config import settings
 
@@ -51,17 +51,17 @@ async def upload_file(
 
 @router.post("/extract-url", response_model=BaseResponse)
 async def extract_from_url(
-    url: str,
+    request: UrlExtractRequest,
     db: Session = Depends(get_db)
 ):
     """从网页 URL 提取内容"""
     try:
         service = FileService(db)
-        content = await service.extract_from_url(url)
+        content = await service.extract_from_url(request.url)
         return BaseResponse(
             success=True,
             message="网页内容提取成功",
-            data={"content": content, "url": url}
+            data={"content": content, "url": request.url}
         )
     except Exception as e:
         raise HTTPException(

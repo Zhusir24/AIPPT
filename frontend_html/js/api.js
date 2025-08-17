@@ -157,7 +157,7 @@ class APIClient {
      * @returns {Promise}
      */
     async parseWebContent(url) {
-        return this.post('/api/v1/files/parse-web', { url });
+        return this.post('/api/v1/files/extract-url', { url });
     }
 
     /**

@@ -73,6 +73,20 @@ body {
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
+.nav-btn.disabled {
+    background: #e9ecef !important;
+    color: #6c757d !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.nav-btn.disabled:hover {
+    background: #e9ecef !important;
+    transform: none !important;
+}
+
 /* 动作按钮 */
 .sidebar-actions {
     padding: 0 1rem;

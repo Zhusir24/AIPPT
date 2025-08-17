@@ -17,6 +17,13 @@ class AIPPTXApp {
                 language: '中文',
                 outlineLength: '中等',
                 moreRequirements: ''
+            },
+            // 步骤完成状态
+            stepCompleted: {
+                step1: false,  // 输入内容
+                step2: false,  // 生成大纲
+                step3: false,  // 选择模板
+                step4: false   // 生成PPT
             }
         };
 
@@ -36,6 +43,7 @@ class AIPPTXApp {
         this.loadSettings();
         this.bindEvents();
         this.updateUI();
+        this.updateNavigationState(); // 初始化导航状态
         this.checkBackendConnection();
         this.loadTemplates();
     }
@@ -70,6 +78,12 @@ class AIPPTXApp {
         // 导航按钮
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                // 检查按钮是否被禁用
+                if (e.target.classList.contains('disabled') || e.target.disabled) {
+                    e.preventDefault();
+                    return;
+                }
+                
                 const step = parseInt(e.target.dataset.step);
                 this.goToStep(step);
             });
@@ -253,11 +267,44 @@ class AIPPTXApp {
     }
 
     /**
+     * 检查步骤是否可以访问
+     * @param {number} step 
+     * @returns {boolean}
+     */
+    canAccessStep(step) {
+        if (step === 1) return true; // 第一步总是可以访问
+        
+        // 检查前面的步骤是否都已完成
+        for (let i = 1; i < step; i++) {
+            if (!this.projectData.stepCompleted[`step${i}`]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 标记步骤为完成
+     * @param {number} step 
+     */
+    markStepCompleted(step) {
+        this.projectData.stepCompleted[`step${step}`] = true;
+        this.updateNavigationState();
+    }
+
+    /**
      * 切换到指定步骤
      * @param {number} step 
      */
     goToStep(step) {
         if (step < 1 || step > 4) return;
+
+        // 检查步骤是否可以访问
+        if (!this.canAccessStep(step)) {
+            const stepNames = ['', '输入内容', '生成大纲', '选择模板', '生成PPT'];
+            this.showToast(`请先完成前面的步骤再访问"${stepNames[step]}"`, 'warning');
+            return;
+        }
 
         this.currentStep = step;
         this.updateUI();
@@ -265,14 +312,33 @@ class AIPPTXApp {
     }
 
     /**
+     * 更新导航状态
+     */
+    updateNavigationState() {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            const step = parseInt(btn.dataset.step);
+            const canAccess = this.canAccessStep(step);
+            
+            // 设置按钮可用状态
+            btn.disabled = !canAccess;
+            btn.classList.toggle('disabled', !canAccess);
+            btn.classList.toggle('active', step === this.currentStep);
+            
+            // 添加提示
+            if (!canAccess) {
+                btn.title = '请先完成前面的步骤';
+            } else {
+                btn.title = '';
+            }
+        });
+    }
+
+    /**
      * 更新UI界面
      */
     updateUI() {
         // 更新导航按钮状态
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            const step = parseInt(btn.dataset.step);
-            btn.classList.toggle('active', step === this.currentStep);
-        });
+        this.updateNavigationState();
 
         // 显示对应步骤面板
         document.querySelectorAll('.step-panel').forEach(panel => {
@@ -467,6 +533,9 @@ class AIPPTXApp {
             this.projectData.inputContent = content;
             this.projectData.title = title;
 
+            // 标记步骤1完成
+            this.markStepCompleted(1);
+
             this.goToStep(2);
             this.generateOutline();
 
@@ -490,11 +559,13 @@ class AIPPTXApp {
 
         try {
             const result = await apiClient.generateOutline({
-                content: this.projectData.inputContent,
-                settings: this.projectData.settings
+                topic: this.projectData.inputContent,
+                language: this.projectData.settings.language || '中文',
+                outline_length: this.projectData.settings.outlineLength || '中等',
+                additional_requirements: this.projectData.settings.moreRequirements || null
             });
 
-            this.projectData.outlineContent = result.data.outline;
+            this.projectData.outlineContent = result.outline_markdown;
 
             // 显示结果
             const outlineContentDiv = document.getElementById('outline-content');
@@ -505,6 +576,9 @@ class AIPPTXApp {
             if (loadingContainer) loadingContainer.style.display = 'none';
             if (resultContainer) resultContainer.style.display = 'block';
             if (nextBtn) nextBtn.disabled = false;
+
+            // 标记步骤2完成
+            this.markStepCompleted(2);
 
             this.updateStatusDisplay();
             this.showToast('大纲生成成功', 'success');
@@ -551,8 +625,7 @@ class AIPPTXApp {
      */
     async loadTemplates() {
         try {
-            const result = await apiClient.getTemplates();
-            const templates = result.data || [];
+            const templates = await apiClient.getTemplates();
             
             this.renderTemplates(templates);
             
@@ -612,6 +685,9 @@ class AIPPTXApp {
         const nextBtn = document.getElementById('btn-next-3');
         if (nextBtn) nextBtn.disabled = false;
 
+        // 标记步骤3完成
+        this.markStepCompleted(3);
+
         this.updateStatusDisplay();
         this.showToast('模板选择成功', 'success');
     }
@@ -639,8 +715,8 @@ class AIPPTXApp {
         try {
             const result = await apiClient.uploadFile(file);
             
-            this.projectData.inputContent = result.data.content;
-            this.projectData.title = result.data.title || file.name;
+            this.projectData.inputContent = result.extracted_content;
+            this.projectData.title = file.name;
 
             // 更新UI显示
             const fileUpload = document.getElementById('file-upload');
@@ -682,14 +758,11 @@ class AIPPTXApp {
             if (progressText) progressText.textContent = '正在准备生成...';
 
             const result = await apiClient.generatePPT({
-                title: this.projectData.title,
-                content: this.projectData.inputContent,
                 outline: this.projectData.outlineContent,
-                templateId: this.projectData.templateId,
-                settings: this.projectData.settings
+                template_id: this.projectData.templateId
             });
 
-            this.projectData.generatedFile = result.data.filename;
+            this.projectData.generatedFile = result.file_path;
 
             // 更新下载链接
             const downloadBtn = document.getElementById('btn-download');
@@ -700,6 +773,9 @@ class AIPPTXApp {
 
             if (loadingContainer) loadingContainer.style.display = 'none';
             if (resultContainer) resultContainer.style.display = 'block';
+
+            // 标记步骤4完成
+            this.markStepCompleted(4);
 
             this.updateStatusDisplay();
             this.showToast('PPT生成成功', 'success');
@@ -759,6 +835,13 @@ class AIPPTXApp {
                     language: '中文',
                     outlineLength: '中等',
                     moreRequirements: ''
+                },
+                // 重置步骤完成状态
+                stepCompleted: {
+                    step1: false,
+                    step2: false,
+                    step3: false,
+                    step4: false
                 }
             };
 

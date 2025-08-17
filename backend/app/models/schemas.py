@@ -138,6 +138,10 @@ class FileUploadResponse(BaseModel):
     extracted_content: Optional[str] = None
 
 
+class UrlExtractRequest(BaseModel):
+    url: str
+
+
 # 通用响应模式
 class BaseResponse(BaseModel):
     success: bool
