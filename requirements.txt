@@ -33,6 +33,7 @@ passlib[bcrypt]==1.7.4
 
 # 开发工具
 python-dotenv==1.0.0
+loguru==0.7.2
 
 # PDF 处理
 PyPDF2==3.0.1 

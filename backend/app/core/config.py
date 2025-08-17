@@ -51,6 +51,16 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field(default="ai-pptx-secret-key-change-in-production", env="SECRET_KEY")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
     
+    # 日志配置
+    LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
+    LOG_FORMAT: str = Field(
+        default="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+        env="LOG_FORMAT"
+    )
+    LOG_FILE: str = Field(default="./logs/aippt.log", env="LOG_FILE")
+    LOG_ROTATION: str = Field(default="10 MB", env="LOG_ROTATION")
+    LOG_RETENTION: str = Field(default="10 days", env="LOG_RETENTION")
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -128,7 +128,63 @@ python3 run_frontend_html.py
 - **AI 服务**：OpenAI/DeepSeek API
 - **PPT 处理**：python-pptx
 - **文档处理**：python-docx + BeautifulSoup
+- **日志系统**：Loguru
 - **服务部署**：Python HTTP Server
+
+## 📝 日志系统
+
+项目集成了强大的 **Loguru** 日志系统，提供详细的运行日志记录：
+
+### 功能特性
+
+- 🎨 **彩色输出**：控制台日志带有颜色标识，便于快速定位问题
+- 📁 **自动轮转**：日志文件自动按大小轮转，避免单文件过大
+- 🔍 **多级别记录**：支持 DEBUG、INFO、SUCCESS、WARNING、ERROR 等级别
+- 📊 **结构化日志**：详细记录每个操作的执行过程和结果
+- 🚨 **异常追踪**：自动记录完整的异常堆栈信息
+
+### 日志配置
+
+可通过环境变量自定义日志配置：
+
+```env
+# 日志级别（DEBUG, INFO, WARNING, ERROR）
+LOG_LEVEL=INFO
+
+# 日志文件路径
+LOG_FILE=./logs/aippt.log
+
+# 日志轮转大小
+LOG_ROTATION=10 MB
+
+# 日志保留时间
+LOG_RETENTION=10 days
+```
+
+### 日志文件位置
+
+- 📄 `backend/logs/aippt.log` - 所有级别的日志
+- 🚨 `backend/logs/error.log` - 错误级别的日志
+
+### 测试日志系统
+
+运行日志测试脚本：
+
+```bash
+cd backend
+python test_logger.py
+```
+
+### 日志内容示例
+
+系统会详细记录以下操作：
+
+- 🚀 **应用启动**：服务启动、数据库连接、路由注册
+- 📨 **API请求**：每个HTTP请求的详细信息和响应时间
+- 🤖 **AI调用**：AI模型调用、token消耗、生成结果
+- 📁 **文件操作**：文件上传、内容提取、格式转换
+- 🎨 **模板处理**：模板选择、内容填充、PPT生成
+- ❌ **错误追踪**：详细的异常信息和调用堆栈
 
 ## 开源协议
 
