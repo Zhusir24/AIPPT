@@ -316,11 +316,32 @@
                                 <option value="openai">OpenAI (GPT-3.5/GPT-4)</option>
                                 <option value="deepseek" selected>DeepSeek</option>
                                 <option value="anthropic">Anthropic (Claude)</option>
+                                <option value="custom">自定义 OPENAI 兼容模型</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        
+                        <!-- 标准API密钥字段 -->
+                        <div class="form-group" id="standard-api-key-group">
                             <label for="api-key-input">API 密钥：</label>
                             <input type="password" id="api-key-input" placeholder="请输入API密钥">
+                        </div>
+                        
+                        <!-- 自定义API配置字段 -->
+                        <div id="custom-api-config" style="display: none;">
+                            <div class="form-group">
+                                <label for="custom-api-url">自定义 API 地址：</label>
+                                <input type="url" id="custom-api-url" placeholder="https://api.example.com/v1">
+                                <small class="form-hint">请输入兼容 OpenAI 格式的 API 地址</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="custom-model-name">模型名称：</label>
+                                <input type="text" id="custom-model-name" placeholder="gpt-3.5-turbo">
+                                <small class="form-hint">请输入要使用的模型名称</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="custom-api-key">API 密钥：</label>
+                                <input type="password" id="custom-api-key" placeholder="请输入API密钥">
+                            </div>
                         </div>
                         <div class="form-actions">
                             <button class="btn-secondary" id="btn-test-connection">🔍 测试连接</button>

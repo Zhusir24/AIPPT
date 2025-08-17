@@ -30,7 +30,11 @@ class AIPPTXApp {
         this.apiConfig = {
             backendUrl: 'http://localhost:8000',
             aiProvider: 'deepseek',
-            apiKey: ''
+            apiKey: '',
+            // 自定义API配置
+            customApiUrl: '',
+            customModelName: '',
+            customApiKey: ''
         };
 
         this.init();
@@ -242,6 +246,30 @@ class AIPPTXApp {
         document.getElementById('btn-test-connection')?.addEventListener('click', () => {
             this.testConnection();
         });
+
+        // AI提供商选择变化
+        document.getElementById('ai-provider-select')?.addEventListener('change', (e) => {
+            this.handleProviderChange(e.target.value);
+        });
+    }
+
+    /**
+     * 处理AI提供商选择变化
+     * @param {string} provider 
+     */
+    handleProviderChange(provider) {
+        const standardApiKeyGroup = document.getElementById('standard-api-key-group');
+        const customApiConfig = document.getElementById('custom-api-config');
+        
+        if (provider === 'custom') {
+            // 显示自定义配置，隐藏标准API密钥
+            if (standardApiKeyGroup) standardApiKeyGroup.style.display = 'none';
+            if (customApiConfig) customApiConfig.style.display = 'block';
+        } else {
+            // 显示标准API密钥，隐藏自定义配置
+            if (standardApiKeyGroup) standardApiKeyGroup.style.display = 'block';
+            if (customApiConfig) customApiConfig.style.display = 'none';
+        }
     }
 
     /**
@@ -454,9 +482,18 @@ class AIPPTXApp {
             const providerNames = {
                 'openai': 'OpenAI',
                 'deepseek': 'DeepSeek',
-                'anthropic': 'Anthropic'
+                'anthropic': 'Anthropic',
+                'custom': '自定义兼容'
             };
-            aiProviderSpan.textContent = providerNames[this.apiConfig.aiProvider] || this.apiConfig.aiProvider;
+            
+            let displayName = providerNames[this.apiConfig.aiProvider] || this.apiConfig.aiProvider;
+            
+            // 如果是自定义提供商，显示模型名称
+            if (this.apiConfig.aiProvider === 'custom' && this.apiConfig.customModelName) {
+                displayName += ` (${this.apiConfig.customModelName})`;
+            }
+            
+            aiProviderSpan.textContent = displayName;
         }
     }
 
@@ -889,10 +926,23 @@ class AIPPTXApp {
             const backendUrlInput = document.getElementById('backend-url-input');
             const aiProviderSelect = document.getElementById('ai-provider-select');
             const apiKeyInput = document.getElementById('api-key-input');
+            
+            // 自定义API配置字段
+            const customApiUrl = document.getElementById('custom-api-url');
+            const customModelName = document.getElementById('custom-model-name');
+            const customApiKey = document.getElementById('custom-api-key');
 
             if (backendUrlInput) backendUrlInput.value = this.apiConfig.backendUrl;
             if (aiProviderSelect) aiProviderSelect.value = this.apiConfig.aiProvider;
             if (apiKeyInput) apiKeyInput.value = this.apiConfig.apiKey;
+            
+            // 填充自定义配置
+            if (customApiUrl) customApiUrl.value = this.apiConfig.customApiUrl;
+            if (customModelName) customModelName.value = this.apiConfig.customModelName;
+            if (customApiKey) customApiKey.value = this.apiConfig.customApiKey;
+            
+            // 根据当前选择的提供商显示/隐藏相应字段
+            this.handleProviderChange(this.apiConfig.aiProvider);
         }
     }
 
@@ -934,10 +984,20 @@ class AIPPTXApp {
         const backendUrlInput = document.getElementById('backend-url-input');
         const aiProviderSelect = document.getElementById('ai-provider-select');
         const apiKeyInput = document.getElementById('api-key-input');
+        
+        // 自定义API配置字段
+        const customApiUrl = document.getElementById('custom-api-url');
+        const customModelName = document.getElementById('custom-model-name');
+        const customApiKey = document.getElementById('custom-api-key');
 
         this.apiConfig.backendUrl = backendUrlInput?.value || this.apiConfig.backendUrl;
         this.apiConfig.aiProvider = aiProviderSelect?.value || this.apiConfig.aiProvider;
         this.apiConfig.apiKey = apiKeyInput?.value || this.apiConfig.apiKey;
+        
+        // 保存自定义配置
+        this.apiConfig.customApiUrl = customApiUrl?.value || this.apiConfig.customApiUrl;
+        this.apiConfig.customModelName = customModelName?.value || this.apiConfig.customModelName;
+        this.apiConfig.customApiKey = customApiKey?.value || this.apiConfig.customApiKey;
 
         // 更新API客户端配置
         apiClient.setBaseURL(this.apiConfig.backendUrl);

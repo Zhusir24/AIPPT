@@ -826,6 +826,29 @@ body {
     margin-right: 0.5rem;
 }
 
+.form-hint {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+#custom-api-config {
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    background: #f8f9fa;
+}
+
+#custom-api-config .form-group {
+    margin-bottom: 1rem;
+}
+
+#custom-api-config .form-group:last-child {
+    margin-bottom: 0;
+}
+
 .form-actions {
     display: flex;
     gap: 1rem;
